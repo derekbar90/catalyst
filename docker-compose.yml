@@ -1,0 +1,309 @@
+version: "3.0"
+
+services:
+
+  api:
+    build:
+      context: .
+    image: atom
+    env_file: docker-compose.env
+    environment:
+      SERVICES: api
+      PORT: 3000
+    links:
+      - nats
+      - redis
+    depends_on:
+      - nats
+      - redis
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=api"
+      - "traefik.port=3000"
+      - "traefik.frontend.entryPoints=http"
+      - "traefik.frontend.rule=PathPrefix:/"
+
+  greeter:
+    build:
+      context: .
+    image: atom
+    env_file: docker-compose.env
+    environment:
+      SERVICES: greeter
+    links:
+      - nats
+      - redis
+    depends_on:
+      - nats
+      - redis
+
+  hydra-migrate:
+    image: oryd/hydra:${HYDRA_VERSION}
+    links:
+      - db:db
+    networks:
+      - atom
+    environment:
+      - LOG_LEVEL=debug
+      - HYDRA_SYSTEM_SECRET=youReallyNeedToChangeThis
+    command:
+      migrate sql postgres://postgres:password@db:5432/postgres?sslmode=disable
+    restart: on-failure
+
+  keto-migrate:
+    image: oryd/keto:${KETO_VERSION}
+    links:
+      - db:db
+    environment:
+      - LOG_LEVEL=debug
+    networks:
+      - atom
+    command:
+      migrate sql postgres://postgres:password@db:5432/postgres?sslmode=disable
+    restart: on-failure
+
+  oathkeeper-migrate:
+    image: oryd/oathkeeper:${OATHKEEPER_VERSION}
+    links:
+      - db:db
+    environment:
+      - LOG_LEVEL=debug
+    networks:
+      - atom
+    command:
+      migrate sql postgres://postgres:password@db:5432/postgres?sslmode=disable
+    restart: on-failure
+
+  hydra:
+    image: "oryd/hydra:${HYDRA_VERSION}"
+    build:
+      dockerfile: services/ory/Dockerfile
+      context: services/ory/.
+    links:
+      - db:db
+    ports:
+      - "4444:4444"
+      - "4445:4445"
+    depends_on:
+      - hydra-migrate
+    command:
+      serve all --dangerous-force-http
+    networks:
+      - atom
+    volumes:
+      - hydra-store:/root
+    environment:
+      CORS_ENABLED: 'true'
+      CORS_ALLOWED_METHODS: POST,GET,PUT,DELETE
+      LOG_LEVEL: debug
+      SYSTEM_SECRET: youReallyNeedToChangeThis
+      DATABASE_URL: postgres://postgres:password@db:5432/postgres?sslmode=disable
+      OAUTH2_CONSENT_URL: "http://${BROWSER_IDP_HOST}:4488/consent"
+      OAUTH2_LOGIN_URL: "http://${BROWSER_IDP_HOST}:4488/login"
+      OAUTH2_ISSUER_URL: "http://${BROWSER_HYDRA_HOST}:4444"
+      OAUTH2_SHARE_ERROR_DEBUG: 1
+    restart: on-failure
+
+  oathkeeper-proxy:
+    image: oryd/oathkeeper:${OATHKEEPER_VERSION}
+    links:
+      - db:db
+    ports:
+      - "4455:4455"
+    depends_on:
+      - oathkeeper-api
+      - hydra
+      - keto
+    command:
+      serve proxy
+    networks:
+      - atom
+    environment:
+      - LOG_LEVEL=debug
+      - PORT=4455
+      - ISSUER_URL=http://${BROWSER_OATHKEEPER_PROXY_HOST}:4455/
+      - OATHKEEPER_API_URL=http://oathkeeper-api:4456
+      - CREDENTIALS_ISSUER_ID_TOKEN_ALGORITHM=ory-hydra
+      - CREDENTIALS_ISSUER_ID_TOKEN_HYDRA_JWK_SET_ID=resources:hydra:jwk:oathkeeper
+      - CREDENTIALS_ISSUER_ID_TOKEN_HYDRA_ADMIN_URL=http://hydra:4445
+      - CREDENTIALS_ISSUER_ID_TOKEN_LIFESPAN=1h
+      - CREDENTIALS_ISSUER_ID_TOKEN_ISSUER=http://oathkeeper-api:4456
+      - CREDENTIALS_ISSUER_ID_TOKEN_JWK_REFRESH_INTERVAL=30m
+      - AUTHORIZER_KETO_URL=http://keto:4466
+      - AUTHENTICATOR_ANONYMOUS_USERNAME=anonymous
+      - AUTHENTICATOR_OAUTH2_INTROSPECTION_URL=http://hydra:4445/oauth2/introspect
+      - AUTHENTICATOR_OAUTH2_CLIENT_CREDENTIALS_TOKEN_URL=http://hydra:4444/oauth2/token
+    restart: on-failure
+
+  oathkeeper-api:
+    image: oryd/oathkeeper:${OATHKEEPER_VERSION}
+    links:
+      - db:db
+    ports:
+      - "4456:4456"
+    depends_on:
+      - hydra-migrate
+    command:
+      serve api
+    networks:
+      - atom
+    environment:
+      - CORS_ENABLED=true
+      - CORS_ALLOWED_METHODS=POST,GET,PUT,DELETE
+      - LOG_LEVEL=debug
+      - PORT=4456
+      - DATABASE_URL=postgres://postgres:password@db:5432/postgres?sslmode=disable
+      - ISSUER_URL=http://${BROWSER_OATHKEEPER_PROXY_HOST}:4455/
+      - AUTHORIZER_KETO_URL=http://keto:4466
+      - CREDENTIALS_ISSUER_ID_TOKEN_ALGORITHM=ory-hydra
+      - CREDENTIALS_ISSUER_ID_TOKEN_HYDRA_JWK_SET_ID=resources:hydra:jwk:oathkeeper
+      - CREDENTIALS_ISSUER_ID_TOKEN_HYDRA_ADMIN_URL=http://hydra:4445
+      - CREDENTIALS_ISSUER_ID_TOKEN_LIFESPAN=1h
+      - CREDENTIALS_ISSUER_ID_TOKEN_ISSUER=http://oathkeeper-api:4456
+      - CREDENTIALS_ISSUER_ID_TOKEN_JWK_REFRESH_INTERVAL=30m
+      - AUTHENTICATOR_OAUTH2_INTROSPECTION_URL=http://hydra:4445/oauth2/introspect
+      - AUTHENTICATOR_OAUTH2_CLIENT_CREDENTIALS_TOKEN_URL=http://hydra:4444/oauth2/token
+    restart: on-failure
+
+  keto:
+    image: oryd/keto:${KETO_VERSION}
+    links:
+      - db:db
+    ports:
+      - "4466:4466"
+    depends_on:
+      - hydra
+      - keto-migrate
+    networks:
+      - atom
+    environment:
+      - CORS_ENABLED=true
+      - CORS_ALLOWED_METHODS=POST,GET,PUT,DELETE
+      - LOG_LEVEL=debug
+      - DATABASE_URL=postgres://postgres:password@db:5432/postgres?sslmode=disable
+    restart: on-failure
+
+  configurator:
+    build:
+      context: ../
+      dockerfile: full-stack/Dockerfile
+      args:
+        - HYDRA_VERSION=${HYDRA_VERSION}
+        - KETO_VERSION=${KETO_VERSION}
+        - OATHKEEPER_VERSION=${OATHKEEPER_VERSION}
+    depends_on:
+      - hydra
+      - keto
+      - oathkeeper-api
+    networks:
+      - atom
+    environment:
+      # All of these URLs MUST NOT end with a trailing slash. This is very important!
+      - HYDRA_URL=http://hydra:4444
+      - HYDRA_ADMIN_URL=http://hydra:4445
+      - KETO_URL=http://keto:4466
+      - RESOURCE_SERVER_URL=http://resource-server:4478
+      - OATHKEEPER_API_URL=http://oathkeeper-api:4456
+      - OATHKEEPER_PROXY_URL=http://oathkeeper-proxy:4455
+
+      # This sets the prefix for all resource, action, and subject names. Be aware that this prefix is automatically
+      # applied to all OAuth2 Clients as well.
+      - "HYDRA_SUBJECT_PREFIX=subjects:hydra:"
+      - "HYDRA_RESOURCE_PREFIX=resources:hydra:"
+      - "HYDRA_ACTION_PREFIX=actions:hydra:"
+      - "OATHKEEPER_RESOURCE_PREFIX=resources:oathkeeper:"
+      - "OATHKEEPER_ACTION_PREFIX=actions:oathkeeper:"
+      - "KETO_RESOURCE_PREFIX=resources:keto:"
+      - "KETO_ACTION_PREFIX=actions:keto:"
+
+      - OATHKEEPER_HYDRA_JWK_SET_ID=jwk:oathkeeper
+      - OATHKEEPER_HYDRA_CLIENT_ID=clients:oathkeeper-client
+      - OATHKEEPER_HYDRA_CLIENT_SECRET=dummy-oathkeeper-secret
+    restart: on-failure
+
+  identity-provider:
+    environment:
+      - HYDRA_ADMIN_URL=http://hydra:4445
+      - NODE_TLS_REJECT_UNAUTHORIZED=0
+      - PORT=4488
+    image: oryd/hydra-login-consent-node:${LOGIN_CONSENT_VERSION}
+    networks:
+      - atom
+    ports:
+      - "4488:4488"
+    restart: on-failure
+
+  # This ".localhost" hack allows us to use http:// in the tests, because hydra only allows http:// on callback urls
+  # for localhost and *.localhost
+  "consumer.localhost":
+    build:
+      context: .
+    networks:
+      - atom
+    depends_on:
+      - hydra
+      - keto
+      - oathkeeper-proxy
+    ports:
+      - "4477:4477"
+    environment:
+      - PORT=4477
+      - OAUTH2_AUTH_URL=http://${BROWSER_HYDRA_HOST}:4444/oauth2/auth
+      - OAUTH2_TOKEN_URL=http://hydra:4444/oauth2/token
+      - OAUTH2_CLIENT_ID=consumer-app
+      - OAUTH2_CLIENT_SECRET=consumer-secret
+      - OAUTH2_REDIRECT_URL=http://${BROWSER_CONSUMER_HOST}:4477/auth/callback
+      - BACKEND_OATHKEEPER_URL=http://oathkeeper-proxy:4455/oathkeeper
+      - BACKEND_WARDEN_SUBJECT_URL=http://resource-server:4478/keto/subject
+      - BACKEND_INTROSPECT_URL=http://resource-server:4478/introspect
+
+  resource-server:
+    build:
+      context: .
+    depends_on:
+      - hydra
+      - keto
+      - oathkeeper-proxy
+    networks:
+      - atom
+    ports:
+      - "4478:4478"
+    environment:
+      - PORT=4478
+      - OATHKEEPER_KEY_URL=http://oathkeeper-api:4456/.well-known/jwks.json
+      - OAUTH2_INTROSPECT_URL=http://hydra:4445/oauth2/introspect
+      - KETO_URL=http://keto:4466
+
+  nats:
+    image: nats
+
+  redis:
+    image: redis:alpine
+
+  db:
+    image: postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: postgres
+
+  traefik:
+    image: traefik:v1.7.16
+    command: --web --docker --docker.domain=docker.localhost --logLevel=INFO --docker.exposedbydefault=false
+    ports:
+      - "3000:80"
+      - "3001:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /dev/null:/traefik.toml
+
+volumes:
+  hydra-store:
+    driver: local
+
+networks:
+  atom:
+    driver: bridge
