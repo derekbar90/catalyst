@@ -12,3 +12,7 @@
 - `npm test` - Run tests & generate coverage report
 - `npm run dc:up`: Start the stack with Docker Compose
 - `npm run dc:down`: Stop the stack with Docker Compose
+
+# # Ports
+Traefik Main: 3000
+Traefik Admin UI: 3001

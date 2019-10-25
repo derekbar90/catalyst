@@ -11,14 +11,6 @@ ENV_KETO_VERSION ?= v0.2.2-sandbox_oryOS.10
 ENV_OATHKEEPER_VESRION ?= v0.14.2_oryOS.10
 ENV_LOGIN_CONSENT_VERSION ?= v1.0.0-rc.5
 
-all:
-ifndef DOCKER_VERSION
-    $(error "command docker is not available, please install Docker")
-endif
-ifndef DOCKER_COMPOSE_VERSION
-    $(error "command docker-compose is not available, please install Docker")
-endif
-
 export LOGIN_CONSENT_VERSION=${ENV_LOGIN_CONSENT_VERSION}
 export HYDRA_VERSION=${ENV_HYDRA_VERSION}
 export OATHKEEPER_VERSION=${ENV_OATHKEEPER_VESRION}
@@ -29,5 +21,11 @@ export BROWSER_CONSUMER_HOST=${ENV_BROWSER_CONSUMER_HOST}
 export BROWSER_IDP_HOST=${ENV_BROWSER_IDP_HOST}
 export BROWSER_OATHKEEPER_PROXY_HOST=${ENV_BROWSER_OATHKEEPER_PROXY_HOST}
 
-start-full-stack:
+start-stack:
 		docker-compose up --build -d
+
+stop-stack:
+		docker-compose stop
+
+start-service:
+		npm run start

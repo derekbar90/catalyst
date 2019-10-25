@@ -9,6 +9,14 @@ services:
     env_file: docker-compose.env
     networks:
       - atom
+    volumes:
+      - ./wait-for-it.sh:/wait-for-it.sh
+    command:
+      - ./wait-for-it.sh
+      - postgresd:5432
+      - --
+      - make
+      - start-service
     environment:
       SERVICES: api
       PORT: 3000
@@ -31,6 +39,14 @@ services:
       context: .
     image: atom
     env_file: docker-compose.env
+    volumes:
+      - ./wait-for-it.sh:/wait-for-it.sh
+    command:
+      - ./wait-for-it.sh
+      - postgresd:5432
+      - --
+      - make
+      - start-service
     networks:
       - atom
     environment:
@@ -95,10 +111,6 @@ services:
       - atom
     environment:
       - DSN=postgres://postgres_user:password@postgresd:5432/postgres?sslmode=disable&max_conns=20&max_idle_conns=4
-
-volumes:
-  hydra-store:
-    driver: local
 
 networks:
   atom:
