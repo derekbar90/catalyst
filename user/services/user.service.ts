@@ -1,7 +1,7 @@
 "use strict";
-import { ServiceSchema } from "moleculer";
+import {Context, ServiceSchema} from "moleculer";
 // @ts-ignore
-import * as DbService  from "moleculer-db";
+import * as DbService from "moleculer-db";
 
 const GreeterService: ServiceSchema = {
 	name: "user",
@@ -46,7 +46,7 @@ const GreeterService: ServiceSchema = {
 			params: {
 				name: "string",
 			},
-			handler(ctx) {
+			handler(ctx: Context<{ name: string }>) {
 				return `Welcome, ${ctx.params.name}`;
 			},
 		},

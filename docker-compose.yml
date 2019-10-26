@@ -4,13 +4,14 @@ services:
 
   api:
     build:
-      context: .
+      context: ./api
     image: atom
     env_file: docker-compose.env
     networks:
       - atom
     volumes:
-      - ./wait-for-it.sh:/wait-for-it.sh
+      - api:/app/node_modules
+      - ./api:/app/:delegated #delegates speeds up mac os volumes
     command:
       - ./wait-for-it.sh
       - postgresd:5432
@@ -27,6 +28,7 @@ services:
       - nats
       - redis
       - postgresd
+      - traefik
     labels:
       - "traefik.enable=true"
       - "traefik.backend=api"
@@ -34,23 +36,24 @@ services:
       - "traefik.frontend.entryPoints=http"
       - "traefik.frontend.rule=PathPrefix:/"
 
-  greeter:
+  user:
     build:
-      context: .
+      context: ./user
     image: atom
     env_file: docker-compose.env
+    networks:
+      - atom
     volumes:
-      - ./wait-for-it.sh:/wait-for-it.sh
+      - user:/app/node_modules
+      - ./user:/app/:delegated #delegates speeds up mac os volumes
     command:
       - ./wait-for-it.sh
       - postgresd:5432
       - --
       - make
       - start-service
-    networks:
-      - atom
     environment:
-      SERVICES: greeter
+      SERVICES: user
     links:
       - nats
       - redis
@@ -58,14 +61,19 @@ services:
       - nats
       - redis
       - postgresd
+      - traefik
 
   nats:
     image: nats
+    ports:
+      - "4222:4222"
     networks:
       - atom
 
   redis:
     image: redis:alpine
+    ports:
+      - "6379:6379"
     networks:
       - atom
 
@@ -111,6 +119,12 @@ services:
       - atom
     environment:
       - DSN=postgres://postgres_user:password@postgresd:5432/postgres?sslmode=disable&max_conns=20&max_idle_conns=4
+
+volumes:
+  api:
+    driver: local
+  user:
+    driver: local
 
 networks:
   atom:

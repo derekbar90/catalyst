@@ -3,17 +3,17 @@ import { BrokerOptions, Errors } from "moleculer";
 
 /**
  * Moleculer ServiceBroker configuration file
- * 
+ *
  * More info about options: https://moleculer.services/docs/0.13/broker.html#Broker-options
- * 
+ *
  * Overwrite options in production:
- * ================================ 
- * 	You can overwrite any option with environment variables. 
+ * ================================
+ * 	You can overwrite any option with environment variables.
  * 	For example to overwrite the "logLevel", use `LOGLEVEL=warn` env var.
  * 	To overwrite a nested parameter, e.g. retryPolicy.retries, use `RETRYPOLICY_RETRIES=10` env var.
- *  
- * 	To overwrite broker’s deeply nested default options, which are not presented in "moleculer.config.ts", 
- * 	via environment variables, use the `MOL_` prefix and double underscore `__` for nested properties in .env file. 
+ *
+ * 	To overwrite broker’s deeply nested default options, which are not presented in "moleculer.config.ts",
+ * 	via environment variables, use the `MOL_` prefix and double underscore `__` for nested properties in .env file.
  * 	For example, to set the cacher prefix to `MYCACHE`, you should declare an env var as `MOL_CACHER__OPTIONS__PREFIX=MYCACHE`.
  */
 const brokerConfig: BrokerOptions = {
@@ -31,15 +31,15 @@ const brokerConfig: BrokerOptions = {
 	// Custom object & array printer for built-in console logger.
 	logObjectPrinter: null,
 
-	// Define transporter. 
+	// Define transporter.
 	// More info: https://moleculer.services/docs/0.13/networking.html
 	transporter: "NATS",
 
 	// Define a cacher. More info: https://moleculer.services/docs/0.13/caching.html
 	cacher: "Redis",
 
-	// Define a serializer. 
-	// Available values: "JSON", "Avro", "ProtoBuf", "MsgPack", "Notepack", "Thrift". 
+	// Define a serializer.
+	// Available values: "JSON", "Avro", "ProtoBuf", "MsgPack", "Notepack", "Thrift".
 	// More info: https://moleculer.services/docs/0.13/networking.html
 	serializer: "JSON",
 
@@ -83,7 +83,7 @@ const brokerConfig: BrokerOptions = {
 
 	// Settings of Service Registry. More info: https://moleculer.services/docs/0.13/registry.html
 	registry: {
-		// Define balancing strategy. 
+		// Define balancing strategy.
 		// Available values: "RoundRobin", "Random", "CpuUsage", "Latency"
 		strategy: "RoundRobin",
 		// Enable local action call preferring.
@@ -117,14 +117,17 @@ const brokerConfig: BrokerOptions = {
 	},
 
 	// Enable parameters validation. More info: https://moleculer.services/docs/0.13/validating.html
-	validation: true,
-	// Custom Validator class for validation.
-	validator: null,
+	validator: true,
 
 	// Enable metrics function. More info: https://moleculer.services/docs/0.13/metrics.html
-	metrics: false,
-	// Rate of metrics calls. 1 means to measure every request, 0 means to measure nothing.
-	metricsRate: 1,
+	metrics: {
+		enabled: false,
+		reporter: [
+			{
+				type: "Console",
+			},
+		],
+	},
 
 	// Register internal services ("$node"). More info: https://moleculer.services/docs/0.13/services.html#Internal-services
 	internalServices: true,
