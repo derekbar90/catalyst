@@ -29,3 +29,7 @@ stop-stack:
 
 start-service:
 	npm run dev
+
+start-code-server:
+	docker run -it -p 127.0.0.1:8080:8080 -v "${HOME}/.local/share/code-server:/home/coder/.local/share/code-server" -v "$PWD:/home/coder/project" codercom/code-server:v2
+
