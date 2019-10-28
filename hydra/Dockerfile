@@ -1,11 +1,13 @@
-FROM node:10-alpine
+FROM oryd/hydra:v1.0.8-alpine
 
 ENV SUPPORTING_FILES /app
-ARG DEV
 
-# install bash for wait-for-it script
-RUN apk update && apk add --update alpine-sdk build-base bash python nano
+USER root
+
+RUN apk update && apk add --update alpine-sdk bash nano
 
 RUN mkdir -p $SUPPORTING_FILES
+
+WORKDIR $SUPPORTING_FILES
 
 COPY . $SUPPORTING_FILES

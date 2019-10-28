@@ -1,3 +1,5 @@
+SHELL=/bin/bash
+
 DOCKER_VERSION := $(shell docker --version 2>/dev/null)
 DOCKER_COMPOSE_VERSION := $(shell docker-compose --version 2>/dev/null)
 
