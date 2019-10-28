@@ -61,3 +61,5 @@ typings/
 .next
 .idea
 postgres/data
+*/services/*.*.js
+*.js.map
