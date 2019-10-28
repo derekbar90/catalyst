@@ -47,7 +47,7 @@ const GreeterService: ServiceSchema = {
 				name: "string",
 			},
 			handler(ctx: Context<{ name: string }>) {
-				return `Welcome, ${ctx.params.name}`;
+				return `Welcome!, ${ctx.params.name}`;
 			},
 		},
 	},

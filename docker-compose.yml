@@ -33,8 +33,7 @@ services:
       - "traefik.enable=true"
       - "traefik.backend=api"
       - "traefik.port=3000"
-      - "traefik.frontend.entryPoints=http"
-      - "traefik.frontend.rule=PathPrefix:/"
+      - "traefik.frontend.rule=Host:funk.derekbarrera.com"
 
   user:
     build:
@@ -89,17 +88,23 @@ services:
       - "5432:5432"
     env_file: docker-compose.env
 
+
   traefik:
-    image: traefik:v1.7.16
-    command: --web --docker --docker.domain=docker.localhost --logLevel=INFO --docker.exposedbydefault=false
+    image: traefik:alpine
+    command: 
+      - --configFile=/traefik.toml
+      - --web
+      - --logLevel=INFO 
     ports:
-      - "3000:80"
-      - "3001:8080"
+      - "80:80"
+      - "8080:8080"
+      - "443:443"
     networks:
       - atom
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - /dev/null:/traefik.toml
+      - ./traefik/traefik.toml:/traefik.toml
+      - ./traefik/acme.json:/acme.json
 
   hydra-migrate:
     image: oryd/hydra:latest
@@ -109,16 +114,30 @@ services:
       - DSN=postgres://postgres_user:password@postgresd:5432/postgres?sslmode=disable&max_conns=20&max_idle_conns=4
     command:
       migrate sql -e --yes
+    depends_on:
+      - postgresd
     restart: on-failure
 
   hydra:
-    image: oryd/hydra
+    image: oryd/hydra:latest
+    volumes:
+      - ./hydra/.hydra.yaml:/.hydra.yaml:delegated
+    links:
+      - postgresd:postgresd
     depends_on:
+      - postgresd
       - hydra-migrate
     networks:
       - atom
+    ports:
+      - "4444:4444"
+      - "4445:4445"
+    command:
+      serve all --dangerous-force-http --config=/.hydra.yaml
     environment:
       - DSN=postgres://postgres_user:password@postgresd:5432/postgres?sslmode=disable&max_conns=20&max_idle_conns=4
+    restart: on-failure
+
 
 volumes:
   api:
