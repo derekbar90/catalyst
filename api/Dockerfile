@@ -14,6 +14,8 @@ WORKDIR $SUPPORTING_FILES
 
 COPY . $SUPPORTING_FILES
 
+RUN ["chmod", "-x", "./wait-for-it.sh"]
+
 RUN if [ "$DEV" = "true" ]; then npm prune --production ; fi
 
 #CMD ["npm", "start"]

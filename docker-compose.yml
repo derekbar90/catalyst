@@ -1,7 +1,6 @@
 version: "3.0"
 
 services:
-
   # service container
   api:
     build:
@@ -13,6 +12,7 @@ services:
     volumes:
       - api:/app/node_modules
       - ./api:/app/:delegated #delegates speeds up mac os volumes
+      - ./wait-for-it.sh:/app/wait-for-it.sh
     command:
       - ./wait-for-it.sh
       - postgresd:5432
@@ -47,6 +47,7 @@ services:
     volumes:
       - user:/app/node_modules
       - ./user:/app/:delegated #delegates speeds up mac os volumes
+      - ./wait-for-it.sh:/app/wait-for-it.sh
     command:
       - ./wait-for-it.sh
       - postgresd:5432
