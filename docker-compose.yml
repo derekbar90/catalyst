@@ -2,6 +2,7 @@ version: "3.0"
 
 services:
 
+  # service container
   api:
     build:
       context: ./api
@@ -34,7 +35,8 @@ services:
       - "traefik.backend=api"
       - "traefik.port=3000"
       - "traefik.frontend.rule=Host:${HOST_NAME}"
-
+      
+  # service container
   user:
     build:
       context: ./user
@@ -53,6 +55,7 @@ services:
       - start-service
     environment:
       SERVICES: user
+      DB_NAME: user
     links:
       - nats
       - redis
@@ -62,6 +65,7 @@ services:
       - postgresd
       - traefik
 
+  # microeservices messaging hub
   nats:
     image: nats
     ports:
@@ -69,6 +73,8 @@ services:
     networks:
       - atom
 
+  # services cache container. Services containers
+  # will use this for faster response rates
   redis:
     image: redis:alpine
     ports:
@@ -76,6 +82,7 @@ services:
     networks:
       - atom
 
+  # database
   postgresd:
     image: postgres:9.6
     restart: always
@@ -88,7 +95,7 @@ services:
       - "5432:5432"
     env_file: docker-compose.env
 
-
+  # router for microservices
   traefik:
     image: traefik:alpine
     command: 
@@ -106,6 +113,9 @@ services:
       - ./traefik/traefik.toml:/traefik.toml
       - ./traefik/acme.json:/acme.json
 
+  # migration container to setup postgres,
+  # this usually will only migrate once
+  # unless you delete ./postgres/data
   hydra-migrate:
     image: oryd/hydra:latest
     networks:
@@ -118,6 +128,8 @@ services:
       - postgresd
     restart: on-failure
 
+  # the main hydra container providing 
+  # http(s)://hydra:4444(4445)
   hydra:
     image: oryd/hydra:v1.0.8-alpine
     container_name: hydra
@@ -164,6 +176,8 @@ services:
       - "traefik.hydra.port=4444" # callback
       - "traefik.hydra.frontend.rule=Host:${HOST_NAME};PathPrefixStrip:/oauth/"
 
+  # tracing container for all tracing reporting
+  # includes hydra and microservices
   jaeger:
     networks: 
       - atom
