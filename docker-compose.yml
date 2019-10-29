@@ -1,6 +1,41 @@
 version: "3.0"
 
 services:
+
+  # service container
+  account:
+    build:
+      context: ./account
+    image: atom
+    env_file: docker-compose.env
+    networks:
+      - atom
+    volumes:
+      - account_vol:/app/node_modules
+      - ./account:/app/:delegated #delegates speeds up mac os volumes
+    command:
+      - ./wait-for-it.sh
+      - postgresd:5432
+      - --
+      - make
+      - start-service
+    environment:
+      SERVICES: account
+      PORT: 5080
+    links:
+      - nats
+      - redis
+    depends_on:
+      - nats
+      - redis
+      - postgresd
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=account"
+      - "traefik.port=5080"
+      - "traefik.frontend.rule=Host:${HOST_NAME}PathPrefixStrip:/cool/"
+
   # service container
   api:
     build:
@@ -193,6 +228,8 @@ services:
       - "9411:9411"
 
 volumes:
+  account_vol:
+    driver: local
   api:
     driver: local
   user:

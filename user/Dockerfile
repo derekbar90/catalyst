@@ -16,8 +16,6 @@ WORKDIR $SUPPORTING_FILES
 
 COPY . $SUPPORTING_FILES
 
-RUN ["chmod", "-x", "./wait-for-it.sh"]
-
 RUN if [ "x$DB_NAME" = "x" ] ; then echo Skipping postgresql client install ; else apk add postgresql-client ; fi
 
 RUN if [ "$DEV" = "true" ]; then npm prune --production ; fi
