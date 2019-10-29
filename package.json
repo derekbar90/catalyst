@@ -1,0 +1,27 @@
+{
+  "name": "catalyst",
+  "version": "0.0.1",
+  "description": "Microservices boilerplate using the Moleculer framework",
+  "main": "index.js",
+  "scripts": {
+    "hygen": "hygen"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/derekbar90/catalyst.git"
+  },
+  "keywords": [
+    "moleculer",
+    "nodejs",
+    "microservices"
+  ],
+  "author": "Derek Barrera",
+  "license": "ISC",
+  "devDependencies": {
+      "hygen": "^5.0.1"
+  },
+  "bugs": {
+    "url": "https://github.com/derekbar90/catalyst/issues"
+  },
+  "homepage": "https://github.com/derekbar90/catalyst#readme"
+}
