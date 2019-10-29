@@ -33,7 +33,7 @@ services:
       - "traefik.enable=true"
       - "traefik.backend=api"
       - "traefik.port=3000"
-      - "traefik.frontend.rule=Host:funk.derekbarrera.com"
+      - "traefik.frontend.rule=Host:${HOST_NAME}"
 
   user:
     build:
@@ -162,7 +162,7 @@ services:
       - "traefik.enable=true"
       - "traefik.hydra.backend=oauth"
       - "traefik.hydra.port=4444" # callback
-      - "traefik.hydra.frontend.rule=Host:funk.derekbarrera.com;PathPrefixStrip:/oauth/"
+      - "traefik.hydra.frontend.rule=Host:${HOST_NAME};PathPrefixStrip:/oauth/"
 
   jaeger:
     networks: 

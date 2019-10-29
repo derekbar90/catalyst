@@ -16,3 +16,10 @@
 # # Ports
 Traefik Main: 3000
 Traefik Admin UI: 3001
+
+
+# # .ENV CONFIG
+
+# # # If you have not setup a .env file you must do so
+
+HOST_NAME: hostname of choice to have the stack run on, if you do this: make sure that LetsEncrypt can do a hostname validation, certbot can be run via nginx if you need it but traefik will auto setup the SSL cert and hold it on a volumes in `traefik/acme.json`
