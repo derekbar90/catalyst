@@ -144,9 +144,9 @@ services:
     environment:
       - DSN=postgres://postgres_user:password@postgresd:5432/postgres?sslmode=disable&max_conns=20&max_idle_conns=4
       - LOG_LEVEL=debug
-      - OAUTH2_ISSUER_URL=http://localhost:4444
-      - OAUTH2_CONSENT_URL=http://localhost:3000/consent
-      - OAUTH2_LOGIN_URL=http://localhost:3000/login
+      - OAUTH2_ISSUER_URL=http://${HOST_NAME}:4444
+      - OAUTH2_CONSENT_URL=http://${HOST_NAME}:3000/consent
+      - OAUTH2_LOGIN_URL=http://${HOST_NAME}:3000/login
       - SYSTEM_SECRET=youReallyNeedToChangeThis
       - OAUTH2_SHARE_ERROR_DEBUG=1
       - OIDC_SUBJECT_TYPES_SUPPORTED=public,pairwise
@@ -160,9 +160,9 @@ services:
     restart: on-failure
     labels:
       - "traefik.enable=true"
-      - "traefik.backend=oauth"
-      - "traefik.port=4444" # callback
-      - "traefik.frontend.rule=Host:funk.derekbarrera.com;PathPrefixStrip:/oauth/"
+      - "traefik.hydra.backend=oauth"
+      - "traefik.hydra.port=4444" # callback
+      - "traefik.hydra.frontend.rule=Host:funk.derekbarrera.com;PathPrefixStrip:/oauth/"
 
   jaeger:
     networks: 
