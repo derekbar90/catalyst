@@ -27,6 +27,9 @@ skip_if: <%= h.changeCase.snakeCase(name) -%>[^_]
 <% if(locals.shouldExposeOnPort){ -%>
       PORT: <%=port%>
 <% } -%>
+<% if(locals.shouldAddDb){ -%>
+      DB_NAME: <%=h.changeCase.snakeCase(name)%>
+<% } -%>
     links:
       - nats
       - redis

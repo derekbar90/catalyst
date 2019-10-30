@@ -29,8 +29,22 @@ Example:
 
 ## Global NPM Scripts
 
+#### Hygen Specific:
 - `npm run hygen` - This is a link to the executable bin/script for the hygen generator library. 
--- Example: `npm run hygen generator help` -> View generator help
+- `npm run hygen generator help` - View generator help
+- `npm run hygen generator new [name]` - Create new generator
+- `npm run hygen generator new-with-prompt [name]`: Create new generator w/ prompt
+
+## Generator Notes
+
+#### Hygen Specific:
+- `npm run hygen` - This is a link to the executable bin/script for the hygen generator library. 
+- `npm run hygen generator help` - View generator help
+- `npm run hygen generator new [name]` - Create new generator
+- `npm run hygen generator new-with-prompt [name]`: Create new generator w/ prompt
+---
+#### Project Specific:
+- `npm run hygen service new`: Create new service
 
 ## Per Service NPM scripts
 
@@ -51,3 +65,12 @@ Example:
 - `npm run dc:up`: Start the stack with Docker Compose
 
 - `npm run dc:down`: Stop the stack with Docker Compose
+
+## Links to main libraries to understand
+
+`Code Generator`: [Hygen](https://www.hygen.io/)
+`Router`: [Traefik](https://docs.traefik.io/)
+`Containers`: [Docker](https://docker.com/)
+`Microservice Framework`: [Moleculer](http://moleculer.services/)
+`Message Bus`: [NATS](https://nats-io.github.io/docs/)
+`Database`:  [Postgresql](https://www.postgresql.org/)
