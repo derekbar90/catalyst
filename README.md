@@ -68,9 +68,9 @@ Example:
 
 ## Links to main libraries to understand
 
-`Code Generator`: [Hygen](https://www.hygen.io/)
-`Router`: [Traefik](https://docs.traefik.io/)
-`Containers`: [Docker](https://docker.com/)
-`Microservice Framework`: [Moleculer](http://moleculer.services/)
-`Message Bus`: [NATS](https://nats-io.github.io/docs/)
-`Database`:  [Postgresql](https://www.postgresql.org/)
+-- `Code Generator`: [Hygen](https://www.hygen.io/)
+-- `Router`: [Traefik](https://docs.traefik.io/)
+--`Containers`: [Docker](https://docker.com/)
+--`Microservice Framework`: [Moleculer](http://moleculer.services/)
+-- `Message Bus`: [NATS](https://nats-io.github.io/docs/)
+-- `Database`:  [Postgresql](https://www.postgresql.org/)
