@@ -18,4 +18,4 @@ WORKDIR $SUPPORTING_FILES
 
 COPY . $SUPPORTING_FILES
 
-RUN if [ "$DEV" = "true" ]; then npm prune --production ; fi
+# RUN if [ "$DEV" = "true" ]; then npm prune --production ; fi
