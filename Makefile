@@ -29,8 +29,11 @@ start-stack:
 stop-stack:
 	docker-compose stop
 
-start-service:
-	npm run dev
+dbash:
+	docker-compose exec ${SVC} bash
+
+dlog:
+	docker-compose logs -f --tail="400" ${SVC}
 
 start-code-server:
 	docker run -it -p 127.0.0.1:8080:8080 -v "${HOME}/.local/share/code-server:/home/coder/.local/share/code-server" -v "$PWD:/home/coder/project" codercom/code-server:v2
