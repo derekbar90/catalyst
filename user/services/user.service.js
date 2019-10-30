@@ -46,7 +46,7 @@ const GreeterService = {
                 name: "string",
             },
             handler(ctx) {
-                return `Welcome, ${ctx.params.name}`;
+                return `Welcome!, ${ctx.params.name}`;
             },
         },
     },
