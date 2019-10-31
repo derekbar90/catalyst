@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
@@ -8,16 +17,38 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 // @ts-ignore
 const DbService = __importStar(require("moleculer-db"));
-const GreeterService = {
+const database_1 = require("../database/database");
+const user_1 = require("../models/user");
+const UserService = {
     name: "user",
     /**
      * Service settings
      */
     settings: {
-        fields: ["_id", "username", "name"],
+        fields: [
+            "id",
+            "username",
+            "firstName",
+            "lastName",
+            "email",
+            "password",
+            "avater",
+            "socialLinks",
+            "status",
+            "plan",
+            "verified",
+            "lastLoginAt",
+            "createdAt",
+            "updatedAt"
+        ],
+    },
+    adapter: database_1.dbAdapter,
+    model: {
+        UserSequelizeModel: user_1.UserSequelizeModel,
+        options: {}
     },
     /**
-     * Service dependencies
+     * Service dependenciescd
      */
     dependencies: [],
     /**
@@ -46,7 +77,10 @@ const GreeterService = {
                 name: "string",
             },
             handler(ctx) {
-                return `Welcome!, ${ctx.params.name}`;
+                return __awaiter(this, void 0, void 0, function* () {
+                    yield ctx.call('user.hello');
+                    return `Welcome!, ${ctx.params.name}`;
+                });
             },
         },
     },
@@ -64,5 +98,5 @@ const GreeterService = {
     created() {
     },
 };
-module.exports = GreeterService;
+module.exports = UserService;
 //# sourceMappingURL=user.service.js.map

@@ -10,15 +10,12 @@ const ApiService: ServiceSchema = {
 	settings: {
 		port: process.env.PORT || 3000,
 
-		path: "/api",
-
 		routes: [
 			{
-				path: "/",
+				path: "/api",
 				whitelist: [
 					"**",
 				],
-				authorization: true,
 			},
 		],
 		// Serve assets from "public" folder
@@ -28,12 +25,7 @@ const ApiService: ServiceSchema = {
 	},
 	
 	methods: {
-		authorize(ctx, route, req, res) {
-			let auth = req.headers['authorization'];
-			console.log('dumb');
-			console.log('dumb');
-		}
-	}
+	},
 };
 
 export = ApiService;

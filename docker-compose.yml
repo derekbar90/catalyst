@@ -22,6 +22,7 @@ services:
     environment:
       SERVICES: api
       PORT: 3000
+      LOGLEVEL: trace
     links:
       - nats
       - redis
@@ -64,6 +65,7 @@ services:
       - redis
       - postgresd
       - traefik
+      - jaeger
 
   # microeservices messaging hub
   nats:
@@ -122,7 +124,7 @@ services:
     networks:
       - catalyst-backend
     environment:
-      - DSN=postgres://postgres_user:password@postgresd:5432/postgres?sslmode=disable&max_conns=20&max_idle_conns=4
+      - DSN=postgres://${POSTGES_USER}:${POSTGRES_PASSWORD}@postgresd:5432/${POSTGRES_DB}?sslmode=disable&max_conns=20&max_idle_conns=4
     command:
       migrate sql -e --yes
     depends_on:
@@ -156,7 +158,7 @@ services:
     command:
       serve all --dangerous-force-http
     environment:
-      - DSN=postgres://postgres_user:password@postgresd:5432/postgres?sslmode=disable&max_conns=20&max_idle_conns=4
+      - DSN=postgres://${POSTGES_USER}:${POSTGRES_PASSWORD}@postgresd:5432/${POSTGRES_DB}?sslmode=disable&max_conns=20&max_idle_conns=4
       - LOG_LEVEL=debug
       - OAUTH2_ISSUER_URL=http://${HOST_NAME}:4444
       - OAUTH2_CONSENT_URL=http://${HOST_NAME}:3000/consent
@@ -185,6 +187,7 @@ services:
       - catalyst-frontend
       - catalyst-backend
     image: jaegertracing/all-in-one:latest
+    container_name: jaeger
     ports:
       - "5775:5775/udp"
       - "6831:6831/udp"
@@ -305,5 +308,6 @@ volumes:
 
 networks:
   catalyst-backend:
+    driver: bridge
   catalyst-frontend:
     driver: bridge

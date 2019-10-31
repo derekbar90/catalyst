@@ -13,18 +13,13 @@ const ApiService = {
                     "**",
                 ],
             },
-            {
-                path: "/auth",
-                whitelist: [
-                    "**",
-                ],
-            },
         ],
         // Serve assets from "public" folder
         assets: {
             folder: "public",
         },
     },
+    methods: {},
 };
 module.exports = ApiService;
 //# sourceMappingURL=api.service.js.map

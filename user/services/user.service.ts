@@ -67,7 +67,10 @@ const UserService: ServiceSchema = {
 			params: {
 				name: "string",
 			},
-			handler(ctx: Context<{ name: string }>) {
+			async handler(ctx: Context<{ name: string }>) {
+
+				await ctx.call('user.hello');
+
 				return `Welcome!, ${ctx.params.name}`;
 			},
 		},

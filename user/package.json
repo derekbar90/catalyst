@@ -38,6 +38,7 @@
   },
   "dependencies": {
     "ioredis": "^4.2.0",
+    "jaeger-client": "^3.17.1",
     "moleculer": "next",
     "moleculer-db": "^0.8.2",
     "moleculer-web": "^0.8.5",
