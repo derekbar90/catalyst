@@ -1,10 +1,25 @@
 
-[![Moleculer](https://badgen.net/badge/Powered%20by/Moleculer/0e83cd)]
+![Moleculer](https://badgen.net/badge/Powered%20by/Moleculer/0e83cd)
 
-# atom
+# Project Catalyst
 
-  
+Project Catalyst is a microservices framework which allows you to create and deploy secured base application development tools within 10 minutes.
 
+1.0 Goals:
+	- User Signup and Login
+	- One time password support
+	- Tracing Services
+	- Metrics Services
+	- SSL Support
+	- Redis Cache
+	- GraphQL and REST API Gateway
+	- OAuth 2.0 and role based access management
+
+1.1 Goals:
+	- Kubernetes configuation
+	- Helm charts for each base service
+	- Multilingual support db service mixin using context api
+	
 ## Initial setup
 
   
@@ -126,9 +141,9 @@ HOST_NAME=https://{YOUR_HOSTNAME}
 
 -- `Router`: [Traefik](https://docs.traefik.io/)
 
---`Containers`: [Docker](https://docker.com/)
+-- `Containers`: [Docker](https://docker.com/)
 
---`Microservice Framework`: [Moleculer](http://moleculer.services/)
+-- `Microservice Framework`: [Moleculer](http://moleculer.services/)
 
 -- `Message Bus`: [NATS](https://nats-io.github.io/docs/)
 

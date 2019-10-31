@@ -42,6 +42,12 @@ to: <%=h.changeCase.snakeCase(name)%>/package.json
     "moleculer": "next",
     "moleculer-db": "^0.8.2",
     "moleculer-web": "^0.8.5",
+<% if(locals.shouldAddDb){ -%>
+    "moleculer-db-adapter-sequelize": "^0.2.2",
+    "sequelize": "^5.21.2",
+    "pg": "^7.12.1",
+    "pg-hstore": "2.3.3",
+<% } -%>
     "nats": "^1.0.1"
   },
   "engines": {

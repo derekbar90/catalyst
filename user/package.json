@@ -13,7 +13,8 @@
     "test": "jest --coverage",
     "lint": "tslint -p tsconfig.json",
     "dc:up": "docker-compose up --build -d",
-    "dc:down": "docker-compose down"
+    "dc:down": "docker-compose down",
+    "sequelize": "sequelize"
   },
   "keywords": [
     "microservices",
@@ -21,23 +22,29 @@
   ],
   "author": "",
   "devDependencies": {
-    "@types/bluebird": "^3.5.24",
-    "@types/node": "^10.12.12",
-    "tslint": "^5.11.0",
+    "@types/bluebird": "^3.5.28",
     "@types/jest": "^23.1.1",
+    "@types/node": "^10.17.2",
+    "@types/validator": "^10.11.3",
     "jest": "^23.6.0",
     "jest-cli": "^23.6.0",
-    "ts-jest": "^23.10.5",
     "moleculer-repl": "^0.5.3",
+    "nodemon": "^1.19.4",
+    "sequelize-cli": "^5.5.1",
+    "ts-jest": "^23.10.5",
     "ts-node": "^7.0.1",
-    "typescript": "^3.2.2",
-    "nodemon": "^1.19.4"
+    "tslint": "^5.11.0",
+    "typescript": "^3.2.2"
   },
   "dependencies": {
     "ioredis": "^4.2.0",
     "moleculer": "next",
     "moleculer-db": "^0.8.2",
     "moleculer-web": "^0.8.5",
+    "moleculer-db-adapter-sequelize": "^0.2.2",
+    "sequelize": "^5.21.2",
+    "pg": "^7.12.1",
+    "pg-hstore": "2.3.3",
     "nats": "^1.0.1"
   },
   "engines": {

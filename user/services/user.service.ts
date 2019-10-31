@@ -2,19 +2,40 @@
 import {Context, ServiceSchema} from "moleculer";
 // @ts-ignore
 import * as DbService from "moleculer-db";
+import { dbAdapter } from "../database/database";
+import { UserSequelizeModel } from "../models/user";
 
-const GreeterService: ServiceSchema = {
+const UserService: ServiceSchema = {
 	name: "user",
 
 	/**
 	 * Service settings
 	 */
 	settings: {
-        fields: ["_id", "username", "name"],
+        fields: [ 
+			"id", 
+			"username", 
+			"firstName", 
+			"lastName", 
+			"email", 
+			"password", 
+			"avater", 
+			"socialLinks", 
+			"status", 
+			"plan", 
+			"verified", 
+			"lastLoginAt", 
+			"createdAt", 
+			"updatedAt"
+		],
     },
-
+	adapter: dbAdapter,
+	model: {
+		UserSequelizeModel,
+		options: {}
+	},
 	/**
-	 * Service dependencies
+	 * Service dependenciescd 
 	 */
 	dependencies: [],
 
@@ -70,7 +91,6 @@ const GreeterService: ServiceSchema = {
 	 * Service created lifecycle event handler
 	 */
 	created() {
-
 	},
 
 	/**
@@ -88,4 +108,4 @@ const GreeterService: ServiceSchema = {
 	// },
 };
 
-export = GreeterService;
+export = UserService;

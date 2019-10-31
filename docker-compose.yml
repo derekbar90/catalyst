@@ -189,6 +189,15 @@ services:
       - "16686:16686"
       - "14268:14268"
       - "9411:9411"
+    depends_on:
+      - traefik
+    environment:
+      - QUERY_BASE_PATH=/jaeger
+    labels:
+      - "traefik.enable=true"
+      - "traefik.jaeger.frontend=jaeger"
+      - "traefik.jaeger.port=16686"
+      - 'traefik.jaeger.frontend.rule=Host:${HOST_NAME};PathPrefix:/jaeger/'
 
 volumes:
   api:

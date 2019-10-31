@@ -4,15 +4,9 @@ export PSQL_DRIVER ?= psql -h $(POSTGRES_HOST) -p $(POSTGRES_PORT) -U $(POSTGRES
 
 DB_NAME ?= -
 
-start-stack:
-	docker-compose up --build -d
-
-stop-stack:
-	docker-compose stop
-
 ifneq ($(DB_NAME),-)
 setup-database:
-	${PSQL_DRIVER} -c 'CREATE DATABASE "${DB_NAME}"' 
+	-${PSQL_DRIVER} -c 'CREATE DATABASE "${DB_NAME}"' 
 else
 setup-database:
 	@echo ---------------
@@ -22,3 +16,30 @@ endif
 
 start-service: setup-database
 	npm run dev
+
+create-db-migration:
+	npm run sequelize migration:generate -- --name=${name}
+
+db-migrate:
+	npm run sequelize db:migrate
+
+db-migrate-status:
+	npm run sequelize db:migrate:status
+
+db-rollback-last-migration:
+	npm run sequelize db:migrate:undo
+
+db-rollback-all-migrations:
+	npm run sequelize db:migrate:undo:all
+
+db-seed-specific:
+	npm run sequelize db:seed
+
+db-seed-all:
+	npm run sequelize db:seed:all
+
+db-seed-undo-specific:
+	npm run sequelize db:seed:undo
+
+db-seed-all:
+	npm run sequelize db:seed:undo:all
