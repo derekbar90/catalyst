@@ -121,13 +121,13 @@ const brokerConfig: BrokerOptions = {
 
 	// Enable metrics function. More info: https://moleculer.services/docs/0.13/metrics.html
 	metrics: {
-		enabled: false,
-		reporter: [
-			{
-				type: "Console",
-			},
-		],
-	},
+        enabled: true,
+        reporter: [
+            {
+                type: "Prometheus",
+            }
+        ]
+    },
 
 	// Register internal services ("$node"). More info: https://moleculer.services/docs/0.13/services.html#Internal-services
 	internalServices: true,
