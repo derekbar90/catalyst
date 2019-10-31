@@ -36,7 +36,7 @@ const brokerConfig: BrokerOptions = {
 	transporter: "NATS",
 
 	// Define a cacher. More info: https://moleculer.services/docs/0.13/caching.html
-	cacher: "Redis",
+	cacher: "redis://redis:6379",
 
 	// Define a serializer.
 	// Available values: "JSON", "Avro", "ProtoBuf", "MsgPack", "Notepack", "Thrift".
