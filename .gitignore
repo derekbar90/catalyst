@@ -64,4 +64,5 @@ postgres/data
 
 # Services build artifacts
 **/services/*.js
+**/*.js
 *.js.map
