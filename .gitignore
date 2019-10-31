@@ -66,4 +66,4 @@ postgres/data
 **/services/*.js
 **/*.js
 *.js.map
-**/moleculer.config.js
+**/*.config.js
