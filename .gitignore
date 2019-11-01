@@ -64,6 +64,10 @@ postgres/data
 
 # Services build artifacts
 **/services/*.js
-**/*.js
-*.js.map
-**/*.config.js
+**/services/*.js.map
+**/models/*.js
+**/models/*.js.map
+**/database/*.js
+**/database/*.js.map
+**/moleculer.config.js
+**/moleculer.config.js.map

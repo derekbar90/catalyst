@@ -1,6 +1,41 @@
 version: "3.0"
 
 services:
+
+  # service container
+  admin:
+    build:
+      context: ./admin
+    image: catalyst
+    env_file: docker-compose.env
+    networks: 
+      - catalyst-backend
+      - catalyst-frontend
+    volumes:
+      - admin_vol:/app/node_modules
+      - ./admin:/app/:delegated #delegates speeds up mac os volumes
+    command:
+      - ./wait-for-it.sh
+      - postgresd:5432
+      - --
+      - make
+      - start-service
+    links:
+      - nats
+      - redis
+    environment:
+      - SUB_PATH=admin
+    depends_on:
+      - nats
+      - redis
+      - postgresd
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=admin"
+      - "traefik.port=3000"
+      - "traefik.frontend.rule=Host:${HOST_NAME};PathPrefixStrip:/admin"
+
   # service container
   api:
     build:
@@ -310,6 +345,8 @@ services:
       - 'traefik.frontend.redirect.entryPoint=https'
 
 volumes:
+  admin_vol:
+    driver: local
   api:
     driver: local
   user:

@@ -10,9 +10,10 @@ const ApiService: ServiceSchema = {
 	settings: {
 		port: process.env.PORT || 3000,
 
+		path: "/api",
 		routes: [
 			{
-				path: "/api",
+				path: "/",
 				whitelist: [
 					"**",
 				],
