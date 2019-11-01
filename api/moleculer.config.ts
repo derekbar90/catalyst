@@ -121,7 +121,7 @@ const brokerConfig: BrokerOptions = {
 
 	// Enable metrics function. More info: https://moleculer.services/docs/0.13/metrics.html
 	metrics: {
-        enabled: true,
+        enabled: Boolean(process.env.METRICS_ENABLED) || false,
         reporter: [
             {
                 type: "Prometheus",

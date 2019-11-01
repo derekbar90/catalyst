@@ -6,31 +6,31 @@
 Project Catalyst is a microservices framework which allows you to create and deploy secured base application development tools within 10 minutes.
 
 1.0 Goals:
-- [ ] User Signup and Login
-- [ ] One time password support
-- [x] Database Setup
-	- [x] Local dev support container
-	- [x] Configurable db adapter
-	- [x] Migrations support
-	- [x] Bootstrap on service at launch
-- [ ] Metrics Services
-	- [x] Prometheus setup
-	- [x]  Grafana setup at /grafana
-	- [ ]  Metrics config setup for services
-		- [ ] Add to template generation
-- [ ] Tracing Services
-	- [x] Jaeger setup at /jaeger
-	- [x] Tracing config setup for services
-		- [ ] Add to template generation
-- [x] SSL Support
-	- [x]  LetsEncrypt Setup
-	- [x]  Traefik Setup at :8080/dashboard
-	- [ ]  Domain setup instruction in README.md
-- [x] Redis Cache
-- [ ] API Gateway
-	- [x] REST
-	- [ ]  GraphQL 
-- [ ] OAuth 2.0 and role based access management
+ - [ ] User Signup and Login
+ - [ ] One time password support
+ - [x] Database Setup
+	 - [x] Local dev support container
+	 - [x] Configurable db adapter
+	 - [x] Migrations support
+	 - [x] Bootstrap on service at launch
+ - [ ] Metrics Services
+	 - [x] Prometheus setup
+	 - [x]  Grafana setup at /grafana
+	 - [x]  Metrics config setup for services
+		 - [ ] Add to template generation
+ - [ ] Tracing Services
+	 - [x] Jaeger setup at /jaeger
+	 - [x] Tracing config setup for services
+		 - [ ] Add to template generation
+ - [x] SSL Support
+	 - [x]  LetsEncrypt Setup
+	 - [x]  Traefik Setup at :8080/dashboard
+	 - [ ]  Domain setup instruction in README.md
+ - [x] Redis Cache
+ - [ ] API Gateway
+	 - [x] REST
+	 - [ ]  GraphQL 
+ - [ ] OAuth 2.0 and role based access management
 
 1.1 Goals:
  - [ ] Social Login
@@ -87,6 +87,8 @@ HOST_NAME=https://{YOUR_HOSTNAME}
 
 ## Global Make Commands
 - `make start-stack` - build and launch all containers
+- `make start-stack-metrics` - build and launch all containers with metrics
+  - Tip: You need to restart any running services with a updated docker-compose.env where METRICS_ENABLED=true
 - `make stop-stack` - stop all launched containers
 - `make dbash SVC=SERVICE_NAME` - takes `SVC` arg and creates a bash command line inside the running service
 - `make dlog SVC=SERVICE_NAME` - takes `SVC` arg and logs with following and tails the last 400 lines of a service
