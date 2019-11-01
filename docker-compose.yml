@@ -6,13 +6,14 @@ services:
   admin:
     build:
       context: ./admin
+    container_name: admin
     image: catalyst
     env_file: docker-compose.env
     networks: 
       - catalyst-backend
       - catalyst-frontend
     volumes:
-      - admin_vol:/app/node_modules
+      - admin:/app/node_modules
       - ./admin:/app/:delegated #delegates speeds up mac os volumes
     command:
       - ./wait-for-it.sh
@@ -246,114 +247,14 @@ services:
       - "traefik.jaeger.frontend=jaeger"
       - "traefik.jaeger.port=16686"
       - 'traefik.jaeger.frontend.rule=Host:${HOST_NAME};PathPrefix:/jaeger/'
-  
-  prometheus:
-    image: prom/prometheus:v2.1.0
-    container_name: prometheus
-    volumes:
-      - ./prometheus/:/etc/prometheus/
-      - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
-    ports:
-      - 9090:9090
-    links:
-      - cadvisor:cadvisor
-      - alertmanager:alertmanager
-    depends_on:
-      - cadvisor
-    networks:
-      - catalyst-backend
-    restart: always
 
-  node-exporter:
-    image: prom/node-exporter
-    container_name: node-exporter
-    volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
-    command: 
-      - '--path.procfs=/host/proc' 
-      - '--path.sysfs=/host/sys'
-      - --collector.filesystem.ignored-mount-points
-      - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
-    ports:
-      - 9100:9100
-    networks:
-      - catalyst-backend
-    restart: always
-
-  alertmanager:
-    image: prom/alertmanager
-    container_name: alertmanager
-    ports:
-      - 9093:9093
-    volumes:
-      - ./alertmanager/:/etc/alertmanager/
-    networks:
-      - catalyst-backend
-    restart: always
-    command:
-      - '--config.file=/etc/alertmanager/config.yml'
-      - '--storage.path=/alertmanager'
-
-  cadvisor:
-    image: google/cadvisor
-    container_name: cadvisor
-    volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:rw
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-    ports:
-      - 8085:8080
-    networks:
-      - catalyst-backend
-    restart: always
-
-  grafana:
-    image: grafana/grafana
-    container_name: grafana
-    user: "104"
-    depends_on:
-      - prometheus
-      - traefik
-    ports:
-      - 3005:3000
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning/:/etc/grafana/provisioning/
-    env_file:
-      - ./grafana.env
-    links:
-      - prometheus:prometheus
-    networks:
-      - catalyst-backend
-      - catalyst-frontend
-    restart: always
-    environment:
-      - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/grafana
-    labels:
-      - "traefik.enable=true"
-      - "traefik.frontend.rule=Path:/grafana/"
-      - "traefik.port=3000"
-      - "traefik.frontend.rule=Host:${HOST_NAME};PathPrefixStrip:/grafana"
-      - 'traefik.frontend.redirect.entryPoint=https'
 
 volumes:
-  admin_vol:
+  admin:
     driver: local
   api:
     driver: local
   user:
-    driver: local
-  prometheus_data:
-    driver: local
-  grafana_data:
     driver: local
 
 networks:

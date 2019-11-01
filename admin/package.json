@@ -36,7 +36,7 @@
     "build": "npm run clean-cache && next build",
     "clean-cache": "rimraf -rf ./node_modules/.cache",
     "dev": "npm run lint && npm run clean-cache && node server.js",
-    "lint": "eslint --fix --ext .js pages components containers libraries server helper_scripts",
+    "lint": "npm list eslint && eslint --fix --ext .js pages components containers libraries server helper_scripts",
     "lint:watch": "esw -w --fix components libraries server",
     "analyze": "cross-env ANALYZE_BUILD=true npm run build",
     "setup": "node ./helper_scripts/CL_commands/setup.js && npm run setup:after",

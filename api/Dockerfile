@@ -13,5 +13,3 @@ RUN mkdir -p $SUPPORTING_FILES && cp -a /tmp/node_modules $SUPPORTING_FILES/
 WORKDIR $SUPPORTING_FILES
 
 COPY . $SUPPORTING_FILES
-
-#CMD ["npm", "start"]

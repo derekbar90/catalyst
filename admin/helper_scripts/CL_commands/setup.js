@@ -56,9 +56,9 @@ function updateReadme(callback) {
 /**
  * Initializes git again
  */
-function initGit(callback) {
-  exec('git init && git add . && git commit -m "Initial commit"', callback);
-}
+// function initGit(callback) {
+//   exec('git init && git add . && git commit -m "Initial commit"', callback);
+// }
 
 /**
  * Deletes a file in the current directory
@@ -80,16 +80,14 @@ function installDepsCallback(error) {
 
   deleteFileInCurrentDir('setup.js', () => {
     process.stdout.write('Initialising new repository...');
-    initGit(() => {
-      cleanSetup(() => {
-        updateReadme(() => {
-          clear();
-          process.stdout.write('\n');
-          process.stdout.write('\nRAN! is ready to go!');
-          process.stdout.write('\n');
-          process.stdout.write('\n');
-          process.exit(0);
-        });
+    cleanSetup(() => {
+      updateReadme(() => {
+        clear();
+        process.stdout.write('\n');
+        process.stdout.write('\nRAN! is ready to go!');
+        process.stdout.write('\n');
+        process.stdout.write('\n');
+        process.exit(0);
       });
     });
   });
