@@ -1,18 +1,17 @@
 FROM node:12-alpine
 
-ENV NODE_MODULES /
 ENV SUPPORTING_FILES /app
+ARG DEV
 
 # install bash for wait-for-it script
 RUN apk update && apk add --update alpine-sdk build-base bash python nano postgresql-client
 
-WORKDIR $NODE_MODULES
+RUN npm i -g pnpm
 
-ADD package.json package-lock.json ./
-RUN npm install
-ENV PATH /node_modules/.bin:$PATH
-
-RUN mkdir -p $SUPPORTING_FILES
+ADD package.json .
+ADD pnpm-lock.yaml .
+RUN pnpm install
+RUN mkdir -p $SUPPORTING_FILES && cp -a ./node_modules $SUPPORTING_FILES/
 
 WORKDIR $SUPPORTING_FILES
 

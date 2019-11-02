@@ -251,8 +251,11 @@ services:
 
 volumes:
   admin_vol:
+    driver: local
   api_vol:
+    driver: local
   user_vol:
+    driver: local
 
 networks:
   catalyst-backend:
