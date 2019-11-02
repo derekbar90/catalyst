@@ -24,7 +24,8 @@ export BROWSER_IDP_HOST=${ENV_BROWSER_IDP_HOST}
 export BROWSER_OATHKEEPER_PROXY_HOST=${ENV_BROWSER_OATHKEEPER_PROXY_HOST}
 
 start-stack:
-	docker-compose -f docker-compose.yml up
+	rm -rf ./**/node_modules
+	docker-compose -f docker-compose.yml up --build
 
 start-stack-metrics:
 	docker-compose -f docker-compose.yml -f docker-compose-metrics.yaml up

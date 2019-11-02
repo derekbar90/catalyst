@@ -8,13 +8,16 @@ RUN apk update && apk add --update alpine-sdk build-base bash python nano
 
 RUN npm i -g pnpm
 
-ADD package.json .
-ADD pnpm-lock.yaml .
-RUN pnpm install
-RUN mkdir -p $SUPPORTING_FILES && cp -a ./node_modules $SUPPORTING_FILES/
+RUN mkdir -p $SUPPORTING_FILES
+RUN mkdir -p /node_modules
 
 WORKDIR $SUPPORTING_FILES
 
-COPY . $SUPPORTING_FILES
+ADD package.json .
+ADD pnpm-lock.yaml .
 
-RUN npm run dev
+RUN pnpm install
+
+RUN cp -av ./node_modules/* /node_modules
+
+COPY . $SUPPORTING_FILES

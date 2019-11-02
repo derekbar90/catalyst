@@ -1,2 +1,4 @@
 start-service:
-	yarn dev
+	ls /node_modules
+	npm list eslint
+	npm run dev

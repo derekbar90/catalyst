@@ -7,14 +7,14 @@ services:
     build:
       context: ./admin
     container_name: admin
-    image: catalyst
+    image: admin
     env_file: docker-compose.env
     networks: 
       - catalyst-backend
       - catalyst-frontend
     volumes:
+      - ./admin:/app:delegated #delegates speeds up mac os volumes
       - admin_vol:/app/node_modules
-      - ./admin:/app/:delegated #delegates speeds up mac os volumes
     command:
       - ./wait-for-it.sh
       - postgresd:5432
@@ -48,8 +48,8 @@ services:
       - catalyst-backend
       - catalyst-frontend
     volumes:
+      - ./api:/app:delegated #delegates speeds up mac os volumes
       - api_vol:/app/node_modules
-      - ./api:/app/:delegated #delegates speeds up mac os volumes
     command:
       - ./wait-for-it.sh
       - postgresd:5432
