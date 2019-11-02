@@ -13,7 +13,7 @@ services:
       - catalyst-backend
       - catalyst-frontend
     volumes:
-      - admin:/app/node_modules
+      - admin_vol:/app/node_modules
       - ./admin:/app/:delegated #delegates speeds up mac os volumes
     command:
       - ./wait-for-it.sh
@@ -48,7 +48,7 @@ services:
       - catalyst-backend
       - catalyst-frontend
     volumes:
-      - api:/app/node_modules
+      - api_vol:/app/node_modules
       - ./api:/app/:delegated #delegates speeds up mac os volumes
     command:
       - ./wait-for-it.sh
@@ -84,7 +84,7 @@ services:
     networks:
       - catalyst-backend
     volumes:
-      - user:/app/node_modules
+      - user_vol:/app/node_modules
       - ./user:/app/:delegated #delegates speeds up mac os volumes
     command:
       - ./wait-for-it.sh
@@ -250,12 +250,9 @@ services:
 
 
 volumes:
-  admin:
-    driver: local
-  api:
-    driver: local
-  user:
-    driver: local
+  admin_vol:
+  api_vol:
+  user_vol:
 
 networks:
   catalyst-backend:

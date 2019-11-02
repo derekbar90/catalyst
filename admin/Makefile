@@ -1,2 +1,2 @@
 start-service:
-	npm run dev
+	yarn dev
