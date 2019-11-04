@@ -73,6 +73,7 @@ const renderAndCache = function renderAndCache(
     return;
   }
 
+
   app
     .renderToHTML(req, res, pagePath, queryParams)
     .then(html => {
@@ -100,13 +101,13 @@ app.prepare().then(() => {
   const server = express();
 
   server.use(compression({ threshold: 0 }));
-  server.use(
-    cors({
-      origin:
-        prettyHost.indexOf('http') !== -1 ? prettyHost : `http://${prettyHost}/${process.env.SUB_PATH ? `${process.env.SUB_PATH}/` : ''}`,
-        credentials: true
-    })
-  );
+  // server.use(
+    // cors({
+    //   origin:
+    //     prettyHost.indexOf('http') !== -1 ? prettyHost : `http://${prettyHost}}`,
+    //     credentials: true
+    // })
+  // );
   server.use(helmet());
   server.use(routerHandler);
 

@@ -39,6 +39,9 @@ const PostList = ({ data, loadMorePosts }: Props) => {
                     postId: post.id,
                     postTitle: encodeURIComponent(post.title)
                   }}
+                  // as={`/admin/details/${post.id}/${encodeURIComponent(
+                  //   post.title
+                  // )}`}
                   passHref
                 >
                   <Title>{post.title}</Title>
