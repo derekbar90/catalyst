@@ -61,7 +61,7 @@ const modelDefinition = {
     password: {
       type: DataTypes.STRING,
     },
-    avater: {
+    avatar: {
       type: DataTypes.STRING,
     },
     socialLinks: {
@@ -82,21 +82,21 @@ const modelDefinition = {
     lastLoginAt: {
       type: DataTypes.DATE,
     },
-    
+
     // Timestamps
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE,
   }
 }
 
-interface UserModelInterface extends Model {
+export interface IUserModel extends Model {
   id: string;
   username: string;
   firstName: string;
   lastName: string;
   email: string;
   password: string;
-  avater: string;
+  avatar: string;
   socialLinks: any;
   status: number;
   plan: any;
@@ -107,7 +107,7 @@ interface UserModelInterface extends Model {
 }
 
 type UserModelStatic = typeof Model & {
-  new (values?: object, options?: BuildOptions): UserModelInterface;
+  new (values?: object, options?: BuildOptions): IUserModel;
 }
 
 export const UserSequelizeModel = modelDefinition;

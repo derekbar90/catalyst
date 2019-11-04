@@ -6,7 +6,7 @@ DB_NAME ?= -
 
 ifneq ($(DB_NAME),-)
 setup-database:
-	-${PSQL_DRIVER} -c 'CREATE DATABASE "${DB_NAME}"' 
+	-${PSQL_DRIVER} -c 'CREATE DATABASE "${DB_NAME}"'
 else
 setup-database:
 	@echo ---------------

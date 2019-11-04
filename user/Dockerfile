@@ -4,7 +4,7 @@ ENV SUPPORTING_FILES /app
 ARG DEV
 
 # install bash for wait-for-it script
-RUN apk update && apk add --update alpine-sdk build-base bash python nano
+RUN apk update && apk add --update alpine-sdk build-base bash python nano postgresql-client
 
 RUN npm i -g pnpm
 
@@ -14,7 +14,6 @@ RUN mkdir -p /node_modules
 WORKDIR $SUPPORTING_FILES
 
 ADD package.json .
-ADD pnpm-lock.yaml .
 
 RUN pnpm install
 

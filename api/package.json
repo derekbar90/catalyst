@@ -34,10 +34,12 @@
     "nodemon": "^1.19.4"
   },
   "dependencies": {
+    "graphql": "^14.5.8",
     "ioredis": "^4.2.0",
     "moleculer": "next",
+    "moleculer-apollo-server": "^0.1.3",
     "moleculer-db": "^0.8.2",
-    "moleculer-web": "^0.8.5",
+    "moleculer-web": "^0.9.0-beta6",
     "nats": "^1.0.1"
   },
   "engines": {

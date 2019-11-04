@@ -1,12 +1,10 @@
 'use strict';
 
-const UserSequelizeModel = require('../models/user');
-
-console.log(UserSequelizeModel)
+const { UserSequelizeModel } = require('../models/user');
 
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable(UserSequelizeModel.name, UserSequelizeModel);
+    return queryInterface.createTable(UserSequelizeModel.name, UserSequelizeModel.define);
   },
   down: (queryInterface, Sequelize) => {
     return queryInterface.dropTable(UserSequelizeModel.name);

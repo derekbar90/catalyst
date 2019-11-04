@@ -9,7 +9,7 @@ services:
     container_name: admin
     image: admin
     env_file: docker-compose.env
-    networks: 
+    networks:
       - catalyst-backend
       - catalyst-frontend
     volumes:
@@ -24,8 +24,6 @@ services:
     links:
       - nats
       - redis
-    environment:
-      - SUB_PATH=admin
     depends_on:
       - nats
       - redis
@@ -35,7 +33,7 @@ services:
       - "traefik.enable=true"
       - "traefik.backend=admin"
       - "traefik.port=3000"
-      - "traefik.frontend.rule=Host:${HOST_NAME};PathPrefixStrip:/admin"
+      - "traefik.frontend.rule=Host:${HOST_NAME};PathPrefix:/admin"
 
   # service container
   api:
@@ -73,7 +71,7 @@ services:
       - "traefik.backend=api"
       - "traefik.port=3000"
       - "traefik.frontend.rule=Host:${HOST_NAME}"
-      
+
   # service container
   user:
     build:
@@ -142,10 +140,10 @@ services:
   traefik:
     image: traefik:alpine
     container_name: traefik
-    command: 
+    command:
       - --configFile=/traefik.toml
       - --web
-      - --logLevel=INFO 
+      - --logLevel=INFO
     ports:
       - "80:80"
       - "8080:8080"
@@ -173,7 +171,7 @@ services:
       - postgresd
     restart: on-failure
 
-  # the main hydra container providing 
+  # the main hydra container providing
   # http(s)://hydra:4444(4445)
   hydra:
     image: oryd/hydra:v1.0.8-alpine
@@ -225,7 +223,7 @@ services:
   # tracing container for all tracing reporting
   # includes hydra and microservices
   jaeger:
-    networks: 
+    networks:
       - catalyst-frontend
       - catalyst-backend
     image: jaegertracing/all-in-one:latest
@@ -247,7 +245,6 @@ services:
       - "traefik.jaeger.frontend=jaeger"
       - "traefik.jaeger.port=16686"
       - 'traefik.jaeger.frontend.rule=Host:${HOST_NAME};PathPrefix:/jaeger/'
-
 
 volumes:
   admin_vol:

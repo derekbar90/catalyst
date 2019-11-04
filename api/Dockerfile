@@ -14,7 +14,6 @@ RUN mkdir -p /node_modules
 WORKDIR $SUPPORTING_FILES
 
 ADD package.json .
-ADD pnpm-lock.yaml .
 
 RUN pnpm install
 
