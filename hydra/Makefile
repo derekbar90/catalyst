@@ -17,3 +17,6 @@ start-login-server:
 
 create-base-client:
 	make create-client-without-secret client_id=${client_id} callback=${callback} response_types=token,code,id_token grant_types=authorization_code,refresh_token,client_credentials,implicit scope=openid,offline
+
+introspect-token:
+	/usr/bin/hydra token introspect ${token} --endpoint ${HYDRA_URL_ADMIN} --client-id ${client_id}

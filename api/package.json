@@ -40,6 +40,9 @@
     "moleculer-apollo-server": "^0.1.3",
     "moleculer-db": "^0.8.2",
     "moleculer-web": "^0.9.0-beta6",
+    "node-fetch": "^2.6.0",
+    "querystring": "^0.2.0",
+    "pug": "^2.0.4",
     "nats": "^1.0.1"
   },
   "engines": {

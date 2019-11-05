@@ -1,71 +1,397 @@
 import { ServiceSchema } from "moleculer";
 import ApiGateway = require("moleculer-web");
 const { ApolloService } = require("moleculer-apollo-server");
-const Kind							= require("graphql/language").Kind;
+const Kind = require("graphql/language").Kind;
+import { hydra } from "../hydra";
+var pug = require("pug");
+var querystring = require("querystring");
 
 const ApiService: ServiceSchema = {
-	name: "api",
+  name: "api",
 
-	mixins: [
-		ApiGateway,
-		ApolloService({
-
-            // Global GraphQL typeDefs
-            typeDefs: `
+  mixins: [
+    ApiGateway,
+    ApolloService({
+      // Global GraphQL typeDefs
+      typeDefs: `
 							scalar Date
 						`,
 
-            // Global resolvers
-            resolvers: {
-							Date: {
-								__parseValue(value: any) {
-									return new Date(value); // value from the client
-								},
-								__serialize(value: any) {
-									return value.getTime(); // value sent to the client
-								},
-								__parseLiteral(ast: { value: any, kind: any }) {
-									if (ast.kind === Kind.INT)
-										return parseInt(ast.value, 10); // ast value is always in string format
+      // Global resolvers
+      resolvers: {
+        Date: {
+          __parseValue(value: any) {
+            return new Date(value); // value from the client
+          },
+          __serialize(value: any) {
+            return value.getTime(); // value sent to the client
+          },
+          __parseLiteral(ast: { value: any; kind: any }) {
+            if (ast.kind === Kind.INT) return parseInt(ast.value, 10); // ast value is always in string format
 
-									return null;
-								}
-							}
-						},
+            return null;
+          }
+        }
+      },
 
-            // API Gateway route options
-            routeOptions: {
-                path: "/graphql",
-                cors: true,
-                mappingPolicy: "restrict"
-						},
-						serverOptions: {
-							tracing: true,
-					}
-        })
-	],
+      // API Gateway route options
+      routeOptions: {
+        path: "/graphql",
+        cors: true,
+        mappingPolicy: "restrict"
+      },
+      serverOptions: {
+        tracing: true
+      }
+    })
+  ],
 
-	// More info about settings: https://moleculer.services/docs/0.13/moleculer-web.html
-	settings: {
-		port: process.env.PORT || 3000,
+  // More info about settings: https://moleculer.services/docs/0.13/moleculer-web.html
+  settings: {
+    port: process.env.PORT || 3000,
+    routes: [
+      {
+        path: "/api",
+        whitelist: ["**"]
+      },
+      {
+        path: "/login",
+        aliases: {
+          "GET /": (req: any, res: any, next: any) => {
+            let login_challenge: string = null;
+            if (req.$params.login_challenge) {
+              login_challenge = req.$params.login_challenge;
 
-		path: "/api",
-		routes: [
-			{
-				path: "/",
-				whitelist: [
-					"**",
-				],
-			},
-		],
-		// Serve assets from "public" folder
-		assets: {
-			folder: "public",
-		},
-	},
+              hydra
+                .getLoginRequest(login_challenge)
+                // This will be called if the HTTP request was successful
+                .then(function(response: any) {
+                  // If hydra was already able to authenticate the user, skip will be true and we do not need to re-authenticate
+                  // the user.
+                  if (response.skip) {
+                    // You can apply logic here, for example update the number of times the user logged in.
+                    // ...
 
-	methods: {
-	},
+                    // Now it's time to grant the login request. You could also deny the request if something went terribly wrong
+                    // (e.g. your arch-enemy logging in...)
+                    return hydra
+                      .acceptLoginRequest(login_challenge, {
+                        // All we need to do is to confirm that we indeed want to log in the user.
+                        subject: response.subject
+                      })
+                      .then(function(response: any) {
+                        // All we need to do now is to redirect the user back to hydra!
+                        res.writeHead(302, {
+                          Location: response.redirect_to
+                        });
+                        res.end();
+                      });
+                  }
+
+                  // If authentication can't be skipped we MUST show the login UI.
+                  var fn = pug.compileFile(`./pages/login.pug`, {});
+                  const html = fn({
+                    challenge: login_challenge
+                  });
+                  res.writeHead(200, {
+                    "Content-Type": "text/html"
+                  });
+                  res.write(html);
+                  res.end();
+                })
+                // This will handle any error that happens when making HTTP calls to hydra
+                .catch(function(error: any) {
+                  next(error);
+                });
+            } else {
+              res.writeHead(302, {
+                Location:
+                  "https://funk.derekbarrera.com/oauth/oauth2/auth?grant_type=client_credentials&scope=offline&client_id=catalyst_mobile&redirect_uri=https://funk.derekbarrera.com/&response_type=code&state=badassmofo"
+              });
+              res.end();
+            }
+          },
+          "POST /": async (req: any, res: any, next: any) => {
+            // The challenge is now a hidden input field, so let's take it from the request body instead
+
+            let body: string[] = [];
+            await req
+              .on("data", (chunk: string) => {
+                body.push(chunk);
+              })
+              .on("end", () => {
+                //@ts-ignore
+                let bodyString = Buffer.concat(body).toString();
+                // BEGINNING OF NEW STUFF
+
+                const parsedBody: {
+                  challenge: string;
+                  email: string;
+                  password: string;
+                  remember?: boolean;
+                  csrf?: string;
+                } = querystring.parse(bodyString);
+
+                // var challenge = body.challenge;
+
+                // Let's check if the user provided valid credentials. Of course, you'd use a database or some third-party service
+                // for this!
+                if (
+                  !(
+                    parsedBody.email === "foo@bar.com" &&
+                    parsedBody.password === "foobar"
+                  )
+                ) {
+                  // Looks like the user provided invalid credentials, let's show the ui again...
+                  var fn = pug.compileFile(`./pages/login.pug`, {});
+                  const html = fn({
+                    challenge: parsedBody.challenge,
+                    error: "The username / password combination is not correct"
+                  });
+                  res.writeHead(200, {
+                    "Content-Type": "text/html"
+                  });
+                  res.write(html);
+                  res.end();
+                }
+
+                // Seems like the user authenticated! Let's tell hydra...
+                hydra
+                  .acceptLoginRequest(parsedBody.challenge, {
+                    // Subject is an alias for user ID. A subject can be a random string, a UUID, an email address, ....
+                    subject: "foo@bar.com",
+
+                    // This tells hydra to remember the browser and automatically authenticate the user in future requests. This will
+                    // set the "skip" parameter in the other route to true on subsequent requests!
+                    remember: Boolean(parsedBody.remember),
+
+                    // When the session expires, in seconds. Set this to 0 so it will never expire.
+                    remember_for: 3600
+
+                    // Sets which "level" (e.g. 2-factor authentication) of authentication the user has. The value is really arbitrary
+                    // and optional. In the context of OpenID Connect, a value of 0 indicates the lowest authorization level.
+                    // acr: '0',
+                  })
+                  .then(function(response: { redirect_to: string }) {
+                    // All we need to do now is to redirect the user back to hydra!
+
+                    console.log(response.redirect_to);
+
+                    res.writeHead(302, {
+                      Location: response.redirect_to
+                    });
+                    res.end();
+                  })
+                  // This will handle any error that happens when making HTTP calls to hydra
+                  .catch(function(error: Error) {
+                    next(error);
+                  });
+
+                // You could also deny the login request which tells hydra that no one authenticated!
+                // hydra.rejectLoginRequest(challenge, {
+                //   error: 'invalid_request',
+                //   error_description: 'The user did something stupid...'
+                // })
+                //   .then(function (response) {
+                //     // All we need to do now is to redirect the browser back to hydra!
+                //     res.redirect(response.redirect_to);
+                //   })
+                //   // This will handle any error that happens when making HTTP calls to hydra
+                //   .catch(function (error) {
+                //     next(error);
+                //   });
+              });
+          }
+        }
+      },
+      {
+        path: "/consent",
+        aliases: {
+          "GET /": (req: any, res: any, next: any) => {
+            let consent_challenge: string = null;
+            if (req.$params.consent_challenge) {
+              consent_challenge = req.$params.consent_challenge;
+
+              hydra
+                .getConsentRequest(consent_challenge)
+                // This will be called if the HTTP request was successful
+                .then(function(response: any) {
+                  // If a user has granted this application the requested scope, hydra will tell us to not show the UI.
+                  if (response.skip) {
+                    // You can apply logic here, for example grant another scope, or do whatever...
+                    // ...
+
+                    // Now it's time to grant the consent request. You could also deny the request if something went terribly wrong
+                    return hydra
+                      .acceptConsentRequest(consent_challenge, {
+                        // We can grant all scopes that have been requested - hydra already checked for us that no additional scopes
+                        // are requested accidentally.
+                        grant_scope: response.requested_scope,
+
+                        // ORY Hydra checks if requested audiences are allowed by the client, so we can simply echo this.
+                        grant_access_token_audience:
+                          response.requested_access_token_audience,
+
+                        // The session allows us to set session data for id and access tokens
+                        session: {
+                          // This data will be available when introspecting the token. Try to avoid sensitive information here,
+                          // unless you limit who can introspect tokens.
+                          // access_token: { foo: 'bar' },
+                          // This data will be available in the ID token.
+                          // id_token: { baz: 'bar' },
+                        }
+                      })
+                      .then(function(response: { redirect_to: string }) {
+                        // All we need to do now is to redirect the user back to hydra!
+                        res.writeHead(302, {
+                          Location: response.redirect_to
+                        });
+                        res.end();
+                      });
+                  }
+
+                  // Looks like the user provided invalid credentials, let's show the ui again...
+                  var fn = pug.compileFile(`./pages/consent.pug`, {});
+                  const html = fn({
+                    challenge: consent_challenge,
+                    // We have a bunch of data available from the response, check out the API docs to find what these values mean
+                    // and what additional data you have available.
+                    requested_scope: response.requested_scope,
+                    user: response.subject,
+                    client: response.client
+                  });
+                  res.writeHead(200, {
+                    "Content-Type": "text/html"
+                  });
+                  res.write(html);
+                  res.end();
+                })
+                // This will handle any error that happens when making HTTP calls to hydra
+                .catch(function(error: Error) {
+                  next(error);
+                });
+            } else {
+              res.writeHead(302, {
+                Location:
+                  "https://funk.derekbarrera.com/oauth/oauth2/auth?grant_type=client_credentials&scope=offline&client_id=catalyst_mobile&redirect_uri=https://funk.derekbarrera.com/login/&response_type=code&state=badassmofo"
+              });
+              res.end();
+            }
+          },
+          "POST /": async (req: any, res: any, next: any) => {
+            // The challenge is now a hidden input field, so let's take it from the request body instead
+
+            let body: string[] = [];
+            await req
+              .on("data", (chunk: string) => {
+                body.push(chunk);
+              })
+              .on("end", () => {
+                //@ts-ignore
+                let bodyString = Buffer.concat(body).toString();
+
+                const parsedBody: {
+                  challenge: string;
+                  email: string;
+                  password: string;
+                  remember?: boolean;
+                  csrf?: string;
+				  submit?: string;
+				  grant_scope?: string[];
+                } = querystring.parse(bodyString);
+
+                // Let's see if the user decided to accept or reject the consent request..
+                if (parsedBody.submit === "Deny access") {
+                  // Looks like the consent request was denied by the user
+                  return (
+                    hydra
+                      .rejectConsentRequest(parsedBody.challenge, {
+                        error: "access_denied",
+                        error_description:
+                          "The resource owner denied the request"
+                      })
+                      .then(function(response: { redirect_to: string }) {
+                        // All we need to do now is to redirect the browser back to hydra!
+                        res.writeHead(302, {
+                          Location: response.redirect_to
+                        });
+                        res.end();
+                      })
+                      // This will handle any error that happens when making HTTP calls to hydra
+                      .catch(function(error: Error) {
+                        next(error);
+                      })
+                  );
+                }
+
+                var grant_scope = parsedBody.grant_scope;
+                if (!Array.isArray(grant_scope)) {
+                  grant_scope = [grant_scope];
+                }
+
+                // Seems like the user authenticated! Let's tell hydra...
+                hydra
+                  .getConsentRequest(parsedBody.challenge)
+                  // This will be called if the HTTP request was successful
+                  .then(function(response: any) {
+                    return hydra
+                      .acceptConsentRequest(parsedBody.challenge, {
+                        // We can grant all scopes that have been requested - hydra already checked for us that no additional scopes
+                        // are requested accidentally.
+                        grant_scope: grant_scope,
+
+                        // The session allows us to set session data for id and access tokens
+                        session: {
+                          // This data will be available when introspecting the token. Try to avoid sensitive information here,
+                          // unless you limit who can introspect tokens.
+                          access_token: { foo: 'bar' },
+                          // This data will be available in the ID token.
+                          id_token: { baz: 'bar' },
+                        },
+
+                        // ORY Hydra checks if requested audiences are allowed by the client, so we can simply echo this.
+                        grant_access_token_audience:
+                          response.requested_access_token_audience,
+
+                        // This tells hydra to remember this consent request and allow the same client to request the same
+                        // scopes from the same user, without showing the UI, in the future.
+                        remember: Boolean(parsedBody.remember),
+
+                        // When this "remember" sesion expires, in seconds. Set this to 0 so it will never expire.
+                        remember_for: 3600
+                      })
+                      .then(function(response: { redirect_to: string }) {
+                        // All we need to do now is to redirect the user back to hydra!
+
+						console.log(`redirect_ending:`, response.redirect_to);
+
+                        res.writeHead(302, {
+                          Location: response.redirect_to
+                        });
+                        res.end();
+                      });
+                  })
+                  // This will handle any error that happens when making HTTP calls to hydra
+                  .catch(function(error: Error) {
+                    next(error);
+                  });
+              });
+          }
+        }
+      }
+    ],
+    // Serve assets from "public" folder
+    assets: {
+      folder: "public"
+    }
+  },
+
+  methods: {
+    renderPage(name: string, params: object, options: object): string {
+      var fn = pug.compileFile(`../pages/${name}`, options);
+      return fn(params);
+    }
+  }
 };
 
 export = ApiService;

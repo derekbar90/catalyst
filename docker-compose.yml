@@ -58,9 +58,11 @@ services:
       SERVICES: api
       PORT: 3000
       LOGLEVEL: trace
+      HYDRA_ADMIN_URL: http://hydra:4445
     links:
       - nats
       - redis
+      - hydra
     depends_on:
       - nats
       - redis
@@ -160,7 +162,7 @@ services:
   # this usually will only migrate once
   # unless you delete ./postgres/data
   hydra-migrate:
-    image: oryd/hydra:latest
+    image: oryd/hydra:v1.0.8-alpine
     networks:
       - catalyst-backend
     environment:
@@ -197,17 +199,18 @@ services:
       - "5555:5555"
     command:
       serve all --dangerous-force-http
+    env_file: docker-compose.env
     environment:
       - DSN=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgresd:5432/${POSTGRES_DB}?sslmode=disable&max_conns=20&max_idle_conns=4
       - LOG_LEVEL=debug
-      - OAUTH2_ISSUER_URL=http://${HOST_NAME}:4444
-      - OAUTH2_CONSENT_URL=http://${HOST_NAME}:3000/consent
-      - OAUTH2_LOGIN_URL=http://${HOST_NAME}:3000/login
+      - OAUTH2_ISSUER_URL=https://${HOST_NAME}/oauth
+      - OAUTH2_CONSENT_URL=https://${HOST_NAME}/consent
+      - OAUTH2_LOGIN_URL=https://${HOST_NAME}/login
       - SYSTEM_SECRET=youReallyNeedToChangeThis
       - OAUTH2_SHARE_ERROR_DEBUG=1
       - OIDC_SUBJECT_TYPES_SUPPORTED=public,pairwise
       - OIDC_SUBJECT_TYPE_PAIRWISE_SALT=youReallyNeedToChangeThis
-      - FORCE_ROOT_CLIENT_CREDENTIALS=root:secret
+      # - FORCE_ROOT_CLIENT_CREDENTIALS=root:secret
       #     Uncomment the following lines
       - TRACING_PROVIDER=jaeger
       - TRACING_PROVIDER_JAEGER_SAMPLING_SERVER_URL=http://jaeger:5778/sampling

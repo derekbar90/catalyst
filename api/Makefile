@@ -28,4 +28,5 @@ stop-stack:
 	docker-compose stop
 
 start-service:
+	npm i
 	npm run dev
