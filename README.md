@@ -6,8 +6,7 @@
 Project Catalyst is a microservices framework which allows you to create and deploy secured base application development tools within 10 minutes.
 
 1.0 Goals:
- - [ ] User Signup and Login
- - [ ] One time password support
+ - [x] User Signup and Login
  - [x] Database Setup
 	 - [x] Local dev support container
 	 - [x] Configurable db adapter
@@ -27,15 +26,21 @@ Project Catalyst is a microservices framework which allows you to create and dep
 	 - [x]  Traefik Setup at :8080/dashboard
 	 - [ ]  Domain setup instruction in README.md
  - [x] Redis Cache
- - [ ] API Gateway
+ - [x] API Gateway
 	 - [x] REST
-	 - [ ]  GraphQL 
- - [ ] OAuth 2.0 and role based access management
+	 - [x]  GraphQL
+ - [x] OAuth 2.0
+   - [x] implicit flow
+   - [x] consent flow
+   - [x] auth code flow
+ - [ ] Role based access management
 
 1.1 Goals:
- - [ ] Social Login
- - [ ] Kubernetes configuation
- - [ ] Helm charts for each base service
+  - [ ] Social Login
+  - [ ] Lerna multi repo support
+  - [ ] One time password support
+  - [ ] Kubernetes configuation
+  - [ ] Helm charts for each base service
 	
 ## Initial setup
 
@@ -74,10 +79,16 @@ If you have not setup a .env file you must create one at the root of the project
 Example:
 
   
-
+```
 HOST_NAME=https://{YOUR_HOSTNAME}
-
-  
+POSTGRES_HOST=postgresd
+POSTGRES_USER=postgres
+POSTGRES_PORT=5432
+POSTGRES_PASSWORD=password
+POSTGRES_DB=postgres
+ADMIN_OAUTH2_CLIENT_ID=catalyst_admin -- !!CHANGE THIS VALUE!!
+ADMIN_OAUTH2_CLIENT_SECRET=r4fVv7NoiZcXO2Fzk5bNFRmn0W -- !!CHANGE THIS VALUE!!
+```
 
 #### Notes
 
