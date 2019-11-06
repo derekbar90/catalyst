@@ -2,7 +2,7 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import { Link } from '../../routes';
-import { A, LogOutButton, Nav, Externals } from './styles';
+import { A, Nav, Externals } from './styles';
 
 type Props = {
   pathname: string,
@@ -10,7 +10,7 @@ type Props = {
   logout: Function
 };
 
-const LinkList = ({ pathname, authenticated, logout }: Props) => (
+const LinkList = ({ pathname, authenticated }: Props) => (
   <Nav>
     <Link prefetch href="/admin" passHref>
       <A active={pathname === '/'}>Main Page</A>
@@ -29,14 +29,9 @@ const LinkList = ({ pathname, authenticated, logout }: Props) => (
       </Link>
     )}
     {authenticated && (
-      <LogOutButton
-        role="link"
-        href="#"
-        onClick={() => logout()}
-        active={pathname === '/sign_up'}
-      >
-        LogOut
-      </LogOutButton>
+      <Link route="logout" passHref>
+        <A>Logout</A>
+      </Link>
     )}
     <Externals>
       <A href="https://www.rantoolkit.com" target="_blank">

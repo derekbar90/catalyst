@@ -11,7 +11,8 @@ import NetworkStatus from '../components/NetworkStatus';
 type Props = {
   title?: string,
   router: Object,
-  children: React.Element<*>
+  children: React.Element<*>,
+  isLoggedIn: boolean
 };
 
 const Default = (props: Props) => (
@@ -23,7 +24,10 @@ const Default = (props: Props) => (
           : `${process.env.PROJECT_NAME}`}
       </title>
     </Helmet>
-    <Header pathname={props.router.url.pathname} />
+    <Header
+      isLoggedIn={props.isLoggedIn}
+      pathname={props.router.url.pathname}
+    />
     <ProjectInfo />
     {props.children}
     <NetworkStatus />

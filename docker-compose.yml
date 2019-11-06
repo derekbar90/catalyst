@@ -21,9 +21,14 @@ services:
       - --
       - make
       - start-service
+    environment:
+      - ADMIN_OAUTH2_CLIENT_ID=${ADMIN_OAUTH2_CLIENT_ID}
+      - ADMIN_OAUTH2_CLIENT_SECRET=${ADMIN_OAUTH2_CLIENT_SECRET}
+      - HOST_NAME=${HOST_NAME}
     links:
       - nats
       - redis
+      - hydra
     depends_on:
       - nats
       - redis

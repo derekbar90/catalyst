@@ -62,6 +62,10 @@ typings/
 .idea
 postgres/data
 
+*.chunk.js
+*.chunk.js.map
+precache-manifest*
+
 # Services build artifacts
 **/services/*.js
 **/services/*.js.map

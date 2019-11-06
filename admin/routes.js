@@ -20,6 +20,7 @@ routes.add('details', getPathFromRoot('/details/:postId/:postTitle'));
 routes.add('create', getPathFromRoot('/create_post'));
 routes.add('signin', getPathFromRoot('/sign_in'));
 routes.add('signup', getPathFromRoot('/sign_up'));
+routes.add('logout', getPathFromRoot('/logout'));
 // @RANEndRoutes
 // ------------ ROUTES ---------------
 //

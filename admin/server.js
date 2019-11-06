@@ -8,6 +8,15 @@ const fs = require('fs');
 const cors = require('cors');
 const helmet = require('helmet');
 const dotenv = require('dotenv');
+const nodeFetch = require('node-fetch');
+
+const session = require("express-session");
+// 1 - importing dependencies
+const passport = require("passport");
+const uid = require('uid-safe');
+const OAuth2Strategy = require('passport-oauth2');
+const refresh = require('passport-oauth2-refresh')
+
 
 dotenv.config();
 
@@ -30,6 +39,14 @@ const ssrCache = new LRUCache({
   max: 100,
   maxAge: 1000 * 60 * 60 // 1hour
 });
+
+const makeBearerRequest = (url, authorization) => nodeFetch(url, {
+  headers: { Authorization: 'bearer ' + authorization }
+}).then((res) => res.ok ? res.json() : res.text())
+  .then((body) => {
+    return typeof body === 'string' ? body : JSON.stringify(body, null, 2)
+  })
+  .catch(err => console.log(err))
 
 // share public env variables (if not already set)
 try {
@@ -93,6 +110,12 @@ const renderAndCache = function renderAndCache(
 const routerHandler = router.getRequestHandler(
   app,
   ({ req, res, route, query }) => {
+    if (!req.isAuthenticated()) {
+      req.session.redirectTo = req.url
+      res.redirect('/admin/auth')
+      return
+    }
+    
     renderAndCache(req, res, route.page, query);
   }
 );
@@ -108,36 +131,91 @@ app.prepare().then(() => {
     //     credentials: true
     // })
   // );
+  const sessionConfig = {
+    secret: uid.sync(18),
+    cookie: {
+      maxAge: 86400 * 1000 // 24 hours in milliseconds
+    },
+    resave: false,
+    saveUninitialized: true
+  };
+  server.use(session(sessionConfig));
   server.use(helmet());
-  server.use(routerHandler);
 
-  server.get(`/favicon.ico`, (req, res) =>
+  // 3 - configuring Auth0Strategy
+  const oAuth2Strategy = new OAuth2Strategy({
+      authorizationURL: `https://${process.env.HOST_NAME}/oauth/oauth2/auth`,
+      tokenURL: 'http://hydra:4444/oauth2/token',
+      clientID: process.env.ADMIN_OAUTH2_CLIENT_ID,
+      clientSecret: process.env.ADMIN_OAUTH2_CLIENT_SECRET,
+      callbackURL: `https://${process.env.HOST_NAME}/admin/callback`,
+      state: true,
+      scope: ['offline', 'openid']
+    },
+    async (accessToken, refreshToken, profile, cb) => {
+      makeBearerRequest(`http://hydra:4444/userinfo`, accessToken).then(
+        res => {
+          return cb(null, { accessToken, profile: res })
+        }
+      );
+    }
+  );
+
+  // 4 - configuring Passport
+  passport.use('oauth2', oAuth2Strategy);
+
+  passport.use('refresh', refresh)
+
+  passport.serializeUser((user, done) => done(null, user));
+  passport.deserializeUser((user, done) => done(null, user));
+
+  // 5 - adding Passport and authentication routes
+  server.use(passport.initialize());
+  server.use(passport.session());
+
+  server.get('/admin/auth', passport.authenticate('oauth2'))
+
+  server.get('/admin/callback', passport.authenticate('oauth2'), (req, res, next) => {
+    // After success, redirect to the page we came from originally
+    res.redirect('/admin')
+  })
+
+  server.get('/admin/logout', function(req, res){
+    req.session.destroy(function (err) {
+      req.logout();
+      res.redirect('/admin'); //Inside a callback… bulletproof!
+    });
+  });
+
+  server.get(`/admin/favicon.ico`, (req, res) =>
     app.serveStatic(req, res, path.resolve('./static/icons/favicon.ico'))
   );
 
-  server.get('/sw.js', (req, res) =>
+  server.get('/admin/sw.js', (req, res) =>
     app.serveStatic(req, res, path.resolve('./.next/sw.js'))
   );
 
-  server.get('/manifest.html', (req, res) =>
+  server.get('/admin/manifest.html', (req, res) =>
     app.serveStatic(req, res, path.resolve('./.next/manifest.html'))
   );
 
-  server.get('/manifest.appcache', (req, res) =>
+  server.get('/admin/manifest.appcache', (req, res) =>
     app.serveStatic(req, res, path.resolve('./.next/manifest.appcache'))
   );
 
   if (isProd) {
-    server.get('/_next/-/app.js', (req, res) =>
+    server.get('/admin/_next/-/app.js', (req, res) =>
       app.serveStatic(req, res, path.resolve('./.next/app.js'))
     );
 
     const hash = buildId;
 
-    server.get(`/_next/${hash}/app.js`, (req, res) =>
+    server.get(`/admin/_next/${hash}/app.js`, (req, res) =>
       app.serveStatic(req, res, path.resolve('./.next/app.js'))
     );
   }
+
+  server.use(routerHandler);
 
   server.get('*', (req, res) => handle(req, res));
 

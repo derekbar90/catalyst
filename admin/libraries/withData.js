@@ -4,10 +4,8 @@ import { ApolloProvider, getDataFromTree } from 'react-apollo';
 import { Provider as ReduxProvider } from 'react-redux';
 import PropTypes from 'prop-types';
 import 'isomorphic-fetch';
-import cookies from 'next-cookies';
 import apolloClient from './apolloClient';
 import reduxStore from './reduxStore';
-import persist from './persist';
 
 type Props = {
   headers: HeadersType,
@@ -55,7 +53,8 @@ export default (
       let serverState = {};
 
       const headers = ctx.req ? ctx.req.headers : {};
-      const token: string = cookies(ctx)[persist.ACCESS_TOKEN_KEY];
+
+      const token: string = ctx.req.user ? ctx.req.user.accessToken : null;
 
       const props = {
         router: {
@@ -63,7 +62,8 @@ export default (
         },
         ...(await (typeof Component.getInitialProps === 'function'
           ? Component.getInitialProps(ctx)
-          : {}))
+          : {})),
+        isLoggedIn: token != null
       };
 
       if (!process.browser) {

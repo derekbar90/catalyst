@@ -1,9 +1,7 @@
 import { connect } from 'react-redux';
 import { dispatchers } from '../AuthFields/store';
 
-const mapStateToProps = state => ({
-  authenticated: state.auth.authenticated
-});
+const mapStateToProps = () => ({});
 
 const mapDispatchToProps = dispatch => ({
   actions: {
