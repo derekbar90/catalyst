@@ -165,8 +165,6 @@ ADMIN_OAUTH2_CLIENT_SECRET=r4fVv7NoiZcXO2Fzk5bNFRmn0W -- !!CHANGE THIS VALUE!!
 
 ## Links to main libraries to understand
 
-  
-
 -- `Code Generator`: [Hygen](https://www.hygen.io/)
 
 -- `Router`: [Traefik](https://docs.traefik.io/)
@@ -178,3 +176,13 @@ ADMIN_OAUTH2_CLIENT_SECRET=r4fVv7NoiZcXO2Fzk5bNFRmn0W -- !!CHANGE THIS VALUE!!
 -- `Message Bus`: [NATS](https://nats-io.github.io/docs/)
 
 -- `Database`: [Postgresql](https://www.postgresql.org/)
+
+-- `Metrics`: [Prometheus](https://prometheus.io/)
+
+-- `Tracing`: [Jaeger](https://www.jaegertracing.io/)
+
+-- `OAuth2`: [Hydra](https://www.ory.sh/hydra)
+
+-- `GraphQL`: [GraphQL](https://graphql.org/)
+
+-- `PassportJS`: [PassportJS](https://passportjs.org)
