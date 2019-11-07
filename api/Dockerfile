@@ -17,8 +17,6 @@ ADD package.json .
 
 RUN pnpm install
 
-RUN cp -a ./node_modules /node_modules
-
 COPY . $SUPPORTING_FILES
 
 RUN npm run test
