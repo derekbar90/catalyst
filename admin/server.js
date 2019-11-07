@@ -31,6 +31,11 @@ const host = customHost || null;
 const prettyHost = customHost || 'localhost';
 const port = parseInt(process.env.PORT, 10) || 3000;
 const publicEnvFilename = 'public.env';
+const subPath = `/${process.env.SUB_PATH}` || '';
+
+console.log(subPath);
+console.log(subPath);
+console.log(subPath);
 
 const app = next({ dev: isDev });
 const handle = app.getRequestHandler();
@@ -112,7 +117,7 @@ const routerHandler = router.getRequestHandler(
   ({ req, res, route, query }) => {
     if (!req.isAuthenticated()) {
       req.session.redirectTo = req.url
-      res.redirect('/admin/auth')
+      res.redirect(`${subPath}/auth`)
       return
     }
     
@@ -148,7 +153,7 @@ app.prepare().then(() => {
       tokenURL: 'http://hydra:4444/oauth2/token',
       clientID: process.env.ADMIN_OAUTH2_CLIENT_ID,
       clientSecret: process.env.ADMIN_OAUTH2_CLIENT_SECRET,
-      callbackURL: `https://${process.env.HOST_NAME}/admin/callback`,
+      callbackURL: `https://${process.env.HOST_NAME}${subPath}/callback`,
       state: true,
       scope: ['offline', 'openid']
     },
@@ -173,44 +178,44 @@ app.prepare().then(() => {
   server.use(passport.initialize());
   server.use(passport.session());
 
-  server.get('/admin/auth', passport.authenticate('oauth2'))
+  server.get(`${subPath}/auth`, passport.authenticate('oauth2'))
 
-  server.get('/admin/callback', passport.authenticate('oauth2'), (req, res, next) => {
+  server.get(`${subPath}/callback`, passport.authenticate('oauth2'), (req, res, next) => {
     // After success, redirect to the page we came from originally
-    res.redirect('/admin')
+    res.redirect(subPath.length === 0 ? '/' : subPath);
   })
 
-  server.get('/admin/logout', function(req, res){
+  server.get(`${subPath}/logout`, function(req, res){
     req.session.destroy(function (err) {
       req.logout();
-      res.redirect('/admin'); //Inside a callback… bulletproof!
+      res.redirect(subPath.length === 0 ? '/' : subPath); //Inside a callback… bulletproof!
     });
   });
 
-  server.get(`/admin/favicon.ico`, (req, res) =>
+  server.get(`${subPath}/favicon.ico`, (req, res) =>
     app.serveStatic(req, res, path.resolve('./static/icons/favicon.ico'))
   );
 
-  server.get('/admin/sw.js', (req, res) =>
+  server.get(`${subPath}/sw.js`, (req, res) =>
     app.serveStatic(req, res, path.resolve('./.next/sw.js'))
   );
 
-  server.get('/admin/manifest.html', (req, res) =>
+  server.get(`${subPath}/manifest.html`, (req, res) =>
     app.serveStatic(req, res, path.resolve('./.next/manifest.html'))
   );
 
-  server.get('/admin/manifest.appcache', (req, res) =>
+  server.get(`${subPath}/manifest.appcache`, (req, res) =>
     app.serveStatic(req, res, path.resolve('./.next/manifest.appcache'))
   );
 
   if (isProd) {
-    server.get('/admin/_next/-/app.js', (req, res) =>
+    server.get(`${subPath}/_next/-/app.js`, (req, res) =>
       app.serveStatic(req, res, path.resolve('./.next/app.js'))
     );
 
     const hash = buildId;
 
-    server.get(`/admin/_next/${hash}/app.js`, (req, res) =>
+    server.get(`${subPath}/_next/${hash}/app.js`, (req, res) =>
       app.serveStatic(req, res, path.resolve('./.next/app.js'))
     );
   }

@@ -9,7 +9,8 @@ const routes = require('next-routes')();
 // for more info, please look at https://github.com/Sly777/ran/blob/master/docs/Routing.md
 //
 
-const getPathFromRoot = path => `/admin${path}`;
+const getPathFromRoot = path =>
+  process.env.SUB_PATH ? `/${process.env.SUB_PATH}${path}` : path;
 
 // Please add your route between of comments
 //

@@ -12,7 +12,11 @@ type Props = {
 
 const LinkList = ({ pathname, authenticated }: Props) => (
   <Nav>
-    <Link prefetch href="/admin" passHref>
+    <Link
+      prefetch
+      href={`/${process.env.SUB_PATH ? process.env.SUB_PATH : ''}`}
+      passHref
+    >
       <A active={pathname === '/'}>Main Page</A>
     </Link>
     <Link prefetch route="create" passHref>
