@@ -388,7 +388,7 @@ const ApiService: ServiceSchema = {
 
   methods: {
     renderPage(name: string, params: object, options: object): string {
-      var fn = pug.compileFile(`../pages/${name}`, options);
+      var fn = pug.compileFile(`${__dirname.split('services')[0]}pages/${name}.pug`, options);
       return fn(params);
     }
   }

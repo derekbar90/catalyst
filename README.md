@@ -33,14 +33,17 @@ Project Catalyst is a microservices framework which allows you to create and dep
    - [x] implicit flow
    - [x] consent flow
    - [x] auth code flow
- - [ ] Role based access management
+ - [ ] ORY Keto
 
 1.1 Goals:
+  - [ ] Kubernetes configuation
+  - [ ] Helm charts for each base service
+  - [ ] Jenkins X Support
+
+1.2 Gaols: 
   - [ ] Social Login
   - [ ] Lerna multi repo support
   - [ ] One time password support
-  - [ ] Kubernetes configuation
-  - [ ] Helm charts for each base service
 	
 ## Initial setup
 

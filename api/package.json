@@ -5,7 +5,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "npm run nodemon & npm run start-service",
-    "start-service": "npm run build && ts-node ./node_modules/moleculer/bin/moleculer-runner.js --hot --repl --config moleculer.config.ts services/*.service.ts",
+    "start-service": "ts-node ./node_modules/moleculer/bin/moleculer-runner.js --hot --repl --config moleculer.config.ts services/*.service.ts",
     "nodemon": "./node_modules/nodemon/bin/nodemon.js --config nodemon.json --exec npm run build",
     "cli": "moleculer connect NATS",
     "start": "moleculer-runner services",
