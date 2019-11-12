@@ -6,7 +6,13 @@
 Project Catalyst is a microservices framework which allows you to create and deploy secured base application development tools within 10 minutes.
 
 1.0 Goals:
- - [x] User Signup and Login
+ - [x] User Management
+	 - [x] User Registration
+	 - [x] User Login
+	 - [ ] Account Verify
+	 - [ ] Password Reset
+	 - [ ] Forgot Username
+	 - [x] Global User Registration Event
  - [x] Database Setup
 	 - [x] Local dev support container
 	 - [x] Configurable db adapter
@@ -34,6 +40,10 @@ Project Catalyst is a microservices framework which allows you to create and dep
    - [x] consent flow
    - [x] auth code flow
  - [ ] ORY Keto
+ - [ ] Email Suport
+   - [x] Service setup w/ mailgun provider 
+   - [x] Templating
+   - [x] User registration event consumption for welcome email
 
 1.1 Goals:
   - [ ] Kubernetes configuation
@@ -83,17 +93,17 @@ Example:
 
   
 ```
-HOST_NAME=https://{YOUR_HOSTNAME}
-POSTGRES_HOST=postgresd
-POSTGRES_USER=postgres
+HOST_NAME={YOUR_HOSTNAME}
+POSTGRES_HOST==#############
+POSTGRES_USER==#############
 POSTGRES_PORT=5432
-POSTGRES_PASSWORD=password
+POSTGRES_PASSWORD==#############
 POSTGRES_DB=postgres
-ADMIN_OAUTH2_CLIENT_ID=catalyst_admin -- !!CHANGE THIS VALUE!!
-ADMIN_OAUTH2_CLIENT_SECRET=r4fVv7NoiZcXO2Fzk5bNFRmn0W -- !!CHANGE THIS VALUE!!
-EMAIL_API_KEY=SOMETHING
-EMAIL_DOMAIN=FOO
-EMAIL_PROVIDER=BAR
+ADMIN_OAUTH2_CLIENT_ID==############# -- !!CHANGE THIS VALUE!!
+ADMIN_OAUTH2_CLIENT_SECRET=############# -- !!CHANGE THIS VALUE!!
+EMAIL_API_KEY==############# !! mailgun specific, use nodemailer config for help !!
+EMAIL_DOMAIN==############# !! mailgun specific, use nodemailer config for help !!
+EMAIL_PROVIDER==#############
 ```
 
 #### Notes
