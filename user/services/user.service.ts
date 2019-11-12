@@ -2,11 +2,11 @@
 import { Context, ServiceSchema } from "moleculer";
 import { Errors } from "moleculer";
 // @ts-ignore
-import * as DbService from "moleculer-db";
+const DbService = require("moleculer-db");
 import { dbAdapter } from "../database/database";
 import { UserSequelizeModel, IUserModel } from "../models/user";
-import * as crypto from 'crypto';
-import * as bcrypt from 'bcrypt';
+import * as crypto from "crypto";
+import * as bcrypt from "bcrypt";
 
 const UserService: ServiceSchema = {
   name: "user",
@@ -54,7 +54,7 @@ const UserService: ServiceSchema = {
 
   model: {
     name: UserSequelizeModel.name,
-    define: UserSequelizeModel.define,
+    define: UserSequelizeModel.define
   },
   /**
    * Service dependenciescd
@@ -118,74 +118,100 @@ const UserService: ServiceSchema = {
 						avatar: String,
 					): User`
       },
-      async handler(ctx: Context<{
-				username: string,
-				password: string,
-				email: string,
-				firstName: string,
-				lastName: string,
-				avatar: string,
-			}>) {
-				let entity = <IUserModel>{};
+      async handler(
+        ctx: Context<{
+          username: string;
+          password: string;
+          email: string;
+          firstName: string;
+          lastName: string;
+          avatar: string;
+        }>
+      ) {
+        let entity = <IUserModel>{};
 
-				// Verify email, if found then fail outright, no need to
-				// look up the username etc or assign an account
-				let foundEmail = await this.getUserByEmail(ctx, ctx.params.email);
-				if (foundEmail) {
-					throw new Errors.MoleculerClientError("Email has already been registered.", 400, "ERR_EMAIL_EXISTS");
-				}
+        // Verify email, if found then fail outright, no need to
+        // look up the username etc or assign an account
+        let foundEmail = await this.getUserByEmail(ctx, ctx.params.email);
+        if (foundEmail) {
+          throw new Errors.MoleculerClientError(
+            "Email has already been registered.",
+            400,
+            "ERR_EMAIL_EXISTS"
+          );
+        }
 
-				if (!ctx.params.username) {
-					throw new Errors.MoleculerClientError("Username can't be empty.", 400, "ERR_USERNAME_EMPTY");
-				}
+        if (!ctx.params.username) {
+          throw new Errors.MoleculerClientError(
+            "Username can't be empty.",
+            400,
+            "ERR_USERNAME_EMPTY"
+          );
+        }
 
-				let foundUsername = await this.getUserByUsername(ctx, ctx.params.username);
-				if (foundUsername) {
-					throw new Errors.MoleculerClientError("Username has already been registered.", 400, "ERR_USERNAME_EXISTS");
-				}
+        let foundUsername = await this.getUserByUsername(
+          ctx,
+          ctx.params.username
+        );
+        if (foundUsername) {
+          throw new Errors.MoleculerClientError(
+            "Username has already been registered.",
+            400,
+            "ERR_USERNAME_EXISTS"
+          );
+        }
 
-				// Set basic data
-				entity.email = ctx.params.email;
-				entity.firstName = ctx.params.firstName;
-				entity.lastName = ctx.params.lastName;
-				entity.plan = 'FREE';
-				entity.avatar = ctx.params.avatar;
-				entity.socialLinks = {};
-				entity.verified = true;
-				entity.status = 1;
+        // Set basic data
+        entity.email = ctx.params.email;
+        entity.firstName = ctx.params.firstName;
+        entity.lastName = ctx.params.lastName;
+        entity.plan = "FREE";
+        entity.avatar = ctx.params.avatar;
+        entity.socialLinks = {};
+        entity.verified = true;
+        entity.status = 1;
 
-				if (!entity.avatar) {
-					// Default avatar as Gravatar
-					const md5 = crypto.createHash("md5").update(entity.email).digest("hex");
-					entity.avatar = `https://gravatar.com/avatar/${md5}?s=64&d=robohash`;
-				}
+        if (!entity.avatar) {
+          // Default avatar as Gravatar
+          const md5 = crypto
+            .createHash("md5")
+            .update(entity.email)
+            .digest("hex");
+          entity.avatar = `https://gravatar.com/avatar/${md5}?s=64&d=robohash`;
+        }
 
-				// Generate passwordless token or hash password
-				if (ctx.params.password) {
-					entity.password = await bcrypt.hash(ctx.params.password, 10);
-				} else {
-					throw new Errors.MoleculerClientError("Password can't be empty.", 400, "ERR_PASSWORD_EMPTY");
-				}
+        // Generate passwordless token or hash password
+        if (ctx.params.password) {
+          entity.password = await bcrypt.hash(ctx.params.password, 10);
+        } else {
+          throw new Errors.MoleculerClientError(
+            "Password can't be empty.",
+            400,
+            "ERR_PASSWORD_EMPTY"
+          );
+        }
 
-				entity.username = ctx.params.username;
+        entity.username = ctx.params.username;
 
-				// Create new user
-				const user = await this.adapter.insert(entity);
+        // Create new user
+        const user = await this.adapter.insert(entity);
+
+        this.broker.broadcast("user.registered", { ...entity }, "mail");
 
         return user;
       }
-		},
+    },
 
-		find: {
+    find: {
       params: {
         limit: { type: "number" },
         offset: { type: "number", optional: true },
-        sort: { type: "string", optional: true },
+        sort: { type: "string", optional: true }
       },
-			graphql: {
-				query: "users(limit: Int!, offset: Int, sort: String): [User]"
+      graphql: {
+        query: "users(limit: Int!, offset: Int, sort: String): [User]"
       }
-		},
+    }
   },
 
   /**
@@ -204,7 +230,10 @@ const UserService: ServiceSchema = {
      * @param {String} email
      */
     async getUserByEmail(ctx: Context, email: string) {
-      const emailLookup = await this.adapter.find({ limit: 1, query: { email } });
+      const emailLookup = await this.adapter.find({
+        limit: 1,
+        query: { email }
+      });
       return emailLookup[0];
     },
 
@@ -215,7 +244,10 @@ const UserService: ServiceSchema = {
      * @param {String} username
      */
     async getUserByUsername(ctx: Context, username: string) {
-      const usernameLookup = await this.adapter.find({ limit: 1, query: { username } });
+      const usernameLookup = await this.adapter.find({
+        limit: 1,
+        query: { username }
+      });
       return usernameLookup[0];
     }
   },

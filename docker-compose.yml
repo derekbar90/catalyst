@@ -3,11 +3,41 @@ version: "3.0"
 services:
 
   # service container
+  email:
+    build:
+      context: ./email
+    image: catalyst_email
+    env_file: docker-compose.env
+    networks:
+      - catalyst-backend
+    volumes:
+      - email_vol:/app/node_modules
+      - ./email:/app/:delegated #delegates speeds up mac os volumes
+    command:
+      - ./wait-for-it.sh
+      - postgresd:5432
+      - --
+      - make
+      - start-service
+    environment:
+      SERVICES: email
+      EMAIL_DOMAIN: ${EMAIL_DOMAIN}
+      EMAIL_API_KEY: ${EMAIL_API_KEY}
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER}
+    links:
+      - nats
+      - redis
+    depends_on:
+      - nats
+      - redis
+      - postgresd
+
+  # service container
   admin:
     build:
       context: ./admin
     container_name: admin
-    image: admin
+    image: catalyst_admin
     env_file: docker-compose.env
     networks:
       - catalyst-backend
@@ -46,7 +76,7 @@ services:
   api:
     build:
       context: ./api
-    image: catalyst
+    image: catalyst_api
     container_name: api
     env_file: docker-compose.env
     networks:
@@ -86,7 +116,7 @@ services:
     build:
       context: ./user
     container_name: user
-    image: catalyst
+    image: catalyst_user
     env_file: docker-compose.env
     networks:
       - catalyst-backend
@@ -257,6 +287,8 @@ services:
       - 'traefik.jaeger.frontend.rule=Host:${HOST_NAME};PathPrefix:/jaeger/'
 
 volumes:
+  email_vol:
+    driver: local
   admin_vol:
     driver: local
   api_vol:

@@ -296,8 +296,8 @@ const ApiService: ServiceSchema = {
                   password: string;
                   remember?: boolean;
                   csrf?: string;
-				  submit?: string;
-				  grant_scope?: string[];
+                  submit?: string;
+                  grant_scope?: string[];
                 } = querystring.parse(bodyString);
 
                 // Let's see if the user decided to accept or reject the consent request..
@@ -344,9 +344,9 @@ const ApiService: ServiceSchema = {
                         session: {
                           // This data will be available when introspecting the token. Try to avoid sensitive information here,
                           // unless you limit who can introspect tokens.
-                          access_token: { foo: 'bar' },
+                          access_token: { foo: "bar" },
                           // This data will be available in the ID token.
-                          id_token: { baz: 'bar' },
+                          id_token: { baz: "bar" }
                         },
 
                         // ORY Hydra checks if requested audiences are allowed by the client, so we can simply echo this.
@@ -363,7 +363,7 @@ const ApiService: ServiceSchema = {
                       .then(function(response: { redirect_to: string }) {
                         // All we need to do now is to redirect the user back to hydra!
 
-						console.log(`redirect_ending:`, response.redirect_to);
+                        console.log(`redirect_ending:`, response.redirect_to);
 
                         res.writeHead(302, {
                           Location: response.redirect_to
@@ -388,7 +388,10 @@ const ApiService: ServiceSchema = {
 
   methods: {
     renderPage(name: string, params: object, options: object): string {
-      var fn = pug.compileFile(`${__dirname.split('services')[0]}pages/${name}.pug`, options);
+      var fn = pug.compileFile(
+        `${__dirname.split("services")[0]}pages/${name}.pug`,
+        options
+      );
       return fn(params);
     }
   }
