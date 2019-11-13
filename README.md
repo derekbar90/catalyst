@@ -34,7 +34,7 @@ Project Catalyst is a microservices framework which allows you to create and dep
  - [x] Redis Cache
  - [x] API Gateway
 	 - [x] REST
-	 - [x]  GraphQL
+	 - [x] GraphQL
  - [x] OAuth 2.0
    - [x] implicit flow
    - [x] consent flow
