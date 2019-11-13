@@ -56,6 +56,17 @@ describe("Test 'api' service", () => {
 			expect(renderPage).toMatch(/html/);
 		});
 
+		it("should return consent page", async () => {
+			const params = {
+				client: {
+					logo_uri: ''
+				},
+				requested_scope: ['test']
+			};
+			const renderPage = service.methods.renderPage('consent', params)
+			expect(renderPage).toMatch(/html/);
+		});
+
 	});
 
 });

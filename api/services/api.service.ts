@@ -121,7 +121,7 @@ const ApiService: ServiceSchema = {
               })
               .on("end", () => {
                 //@ts-ignore
-                let bodyString = Buffer.concat(body).toString();
+                let bodyString = Buffer.from(body.concat('')).toString();
                 // BEGINNING OF NEW STUFF
 
                 const parsedBody: {
@@ -288,7 +288,7 @@ const ApiService: ServiceSchema = {
               })
               .on("end", () => {
                 //@ts-ignore
-                let bodyString = Buffer.concat(body).toString();
+                let bodyString = Buffer.from(body.concat('')).toString();
 
                 const parsedBody: {
                   challenge: string;
@@ -460,7 +460,7 @@ const ApiService: ServiceSchema = {
                 body.push(chunk);
               })
               .on("end", () => {
-                let bodyString = Buffer.concat(body).toString();
+                let bodyString = Buffer.from(body.concat('')).toString();
 
                 const parsedBody: {
                   challenge: string;
@@ -635,7 +635,7 @@ const ApiService: ServiceSchema = {
               })
               .on("end", () => {
                 //@ts-ignore
-                let bodyString = Buffer.concat(body).toString();
+                let bodyString = Buffer.from(body.concat('')).toString();
 
                 const parsedBody: {
                   challenge: string;
