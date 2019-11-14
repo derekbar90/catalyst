@@ -124,15 +124,27 @@ const ApiService: ServiceSchema = {
                   csrf?: string;
                 } = querystring.parse(bodyString);
 
-                const isPasswordValid = req.$ctx.call('user.validatePassword', {
+                const isPasswordValid = req.$ctx.call("user.validatePassword", {
                   email: parsedBody.email,
                   password: parsedBody.password
-                })
+                });
 
                 // Let's check if the user provided valid credentials
-                if (
-                  !isPasswordValid
-                ) {
+                if (!isPasswordValid) {
+                  hydra
+                    .rejectLoginRequest(parsedBody.challenge, {
+                      error: "invalid_request",
+                      error_description: "The user did something stupid..."
+                    })
+                    .then(function(response: { redirect_to: string }) {
+                      // All we need to do now is to redirect the browser back to hydra!
+                      res.redirect(response.redirect_to);
+                    })
+                    // This will handle any error that happens when making HTTP calls to hydra
+                    .catch(function(error: Error) {
+                      next(error);
+                    });
+
                   // Looks like the user provided invalid credentials, let's show the ui again...
                   var fn = pug.compileFile(`./pages/login.pug`, {});
                   const html = fn({
@@ -144,53 +156,39 @@ const ApiService: ServiceSchema = {
                   });
                   res.write(html);
                   res.end();
-                }
+                } else {
+                  // Seems like the user authenticated! Let's tell hydra...
+                  hydra
+                    .acceptLoginRequest(parsedBody.challenge, {
+                      // Subject is an alias for user ID. A subject can be a random string, a UUID, an email address, ....
+                      subject: parsedBody.email,
 
-                // Seems like the user authenticated! Let's tell hydra...
-                hydra
-                  .acceptLoginRequest(parsedBody.challenge, {
-                    // Subject is an alias for user ID. A subject can be a random string, a UUID, an email address, ....
-                    subject: "foo@bar.com",
+                      // This tells hydra to remember the browser and automatically authenticate the user in future requests. This will
+                      // set the "skip" parameter in the other route to true on subsequent requests!
+                      remember: Boolean(parsedBody.remember),
 
-                    // This tells hydra to remember the browser and automatically authenticate the user in future requests. This will
-                    // set the "skip" parameter in the other route to true on subsequent requests!
-                    remember: Boolean(parsedBody.remember),
+                      // When the session expires, in seconds. Set this to 0 so it will never expire.
+                      remember_for: 3600
 
-                    // When the session expires, in seconds. Set this to 0 so it will never expire.
-                    remember_for: 3600
+                      // Sets which "level" (e.g. 2-factor authentication) of authentication the user has. The value is really arbitrary
+                      // and optional. In the context of OpenID Connect, a value of 0 indicates the lowest authorization level.
+                      // acr: '0',
+                    })
+                    .then(function(response: { redirect_to: string }) {
+                      // All we need to do now is to redirect the user back to hydra!
 
-                    // Sets which "level" (e.g. 2-factor authentication) of authentication the user has. The value is really arbitrary
-                    // and optional. In the context of OpenID Connect, a value of 0 indicates the lowest authorization level.
-                    // acr: '0',
-                  })
-                  .then(function(response: { redirect_to: string }) {
-                    // All we need to do now is to redirect the user back to hydra!
+                      console.log(response.redirect_to);
 
-                    console.log(response.redirect_to);
-
-                    res.writeHead(302, {
-                      Location: response.redirect_to
+                      res.writeHead(302, {
+                        Location: response.redirect_to
+                      });
+                      res.end();
+                    })
+                    // This will handle any error that happens when making HTTP calls to hydra
+                    .catch(function(error: Error) {
+                      next(error);
                     });
-                    res.end();
-                  })
-                  // This will handle any error that happens when making HTTP calls to hydra
-                  .catch(function(error: Error) {
-                    next(error);
-                  });
-
-                // You could also deny the login request which tells hydra that no one authenticated!
-                // hydra.rejectLoginRequest(challenge, {
-                //   error: 'invalid_request',
-                //   error_description: 'The user did something stupid...'
-                // })
-                //   .then(function (response) {
-                //     // All we need to do now is to redirect the browser back to hydra!
-                //     res.redirect(response.redirect_to);
-                //   })
-                //   // This will handle any error that happens when making HTTP calls to hydra
-                //   .catch(function (error) {
-                //     next(error);
-                //   });
+                }
               });
           }
         }
@@ -314,52 +312,69 @@ const ApiService: ServiceSchema = {
                   grant_scope = [grant_scope];
                 }
 
-                // Seems like the user authenticated! Let's tell hydra...
-                hydra
-                  .getConsentRequest(parsedBody.challenge)
-                  // This will be called if the HTTP request was successful
-                  .then(function(response: any) {
-                    return hydra
-                      .acceptConsentRequest(parsedBody.challenge, {
-                        // We can grant all scopes that have been requested - hydra already checked for us that no additional scopes
-                        // are requested accidentally.
-                        grant_scope: grant_scope,
+                const userLookup = await req.$ctx.call("user.find", {
+                  limit: 1,
+                  query: { email: parsedBody.email }
+                });
 
-                        // The session allows us to set session data for id and access tokens
-                        session: {
-                          // This data will be available when introspecting the token. Try to avoid sensitive information here,
-                          // unless you limit who can introspect tokens.
-                          access_token: { foo: "bar" },
-                          // This data will be available in the ID token.
-                          id_token: { baz: "bar" }
-                        },
-
-                        // ORY Hydra checks if requested audiences are allowed by the client, so we can simply echo this.
-                        grant_access_token_audience:
-                          response.requested_access_token_audience,
-
-                        // This tells hydra to remember this consent request and allow the same client to request the same
-                        // scopes from the same user, without showing the UI, in the future.
-                        remember: Boolean(parsedBody.remember),
-
-                        // When this "remember" sesion expires, in seconds. Set this to 0 so it will never expire.
-                        remember_for: 3600
-                      })
-                      .then(function(response: { redirect_to: string }) {
-                        // All we need to do now is to redirect the user back to hydra!
-
-                        console.log(`redirect_ending:`, response.redirect_to);
-
-                        res.writeHead(302, {
-                          Location: response.redirect_to
-                        });
-                        res.end();
-                      });
-                  })
-                  // This will handle any error that happens when making HTTP calls to hydra
-                  .catch(function(error: Error) {
-                    next(error);
+                if (userLookup == null || userLookup.length == 0) {
+                  req.$service.buildPageResponse(res, `forgot_password`, {
+                    error: "User with provided email could not be found"
                   });
+                } else {
+                  // Seems like the user authenticated! Let's tell hydra...
+                  hydra
+                    .getConsentRequest(parsedBody.challenge)
+                    // This will be called if the HTTP request was successful
+                    .then(function(response: any) {
+                      return hydra
+                        .acceptConsentRequest(parsedBody.challenge, {
+                          // We can grant all scopes that have been requested - hydra already checked for us that no additional scopes
+                          // are requested accidentally.
+                          grant_scope: grant_scope,
+
+                          // The session allows us to set session data for id and access tokens
+                          session: {
+                            // This data will be available when introspecting the token. Try to avoid sensitive information here,
+                            // unless you limit who can introspect tokens.
+                            access_token: { 
+                              id: userLookup[0].id,
+                              firstName: userLookup[0].firstName,
+                             },
+                            // This data will be available in the ID token.
+                            id_token: { 
+                              id: userLookup[0].id,
+                              firstName: userLookup[0].firstName,
+                            }
+                          },
+
+                          // ORY Hydra checks if requested audiences are allowed by the client, so we can simply echo this.
+                          grant_access_token_audience:
+                            response.requested_access_token_audience,
+
+                          // This tells hydra to remember this consent request and allow the same client to request the same
+                          // scopes from the same user, without showing the UI, in the future.
+                          remember: Boolean(parsedBody.remember),
+
+                          // When this "remember" sesion expires, in seconds. Set this to 0 so it will never expire.
+                          remember_for: 3600
+                        })
+                        .then(function(response: { redirect_to: string }) {
+                          // All we need to do now is to redirect the user back to hydra!
+
+                          console.log(`redirect_ending:`, response.redirect_to);
+
+                          res.writeHead(302, {
+                            Location: response.redirect_to
+                          });
+                          res.end();
+                        });
+                    })
+                    // This will handle any error that happens when making HTTP calls to hydra
+                    .catch(function(error: Error) {
+                      next(error);
+                    });
+                }
               });
           }
         }
@@ -560,7 +575,7 @@ const ApiService: ServiceSchema = {
               });
           }
         }
-      },
+      }
     ],
     // Serve assets from "public" folder
     assets: {
