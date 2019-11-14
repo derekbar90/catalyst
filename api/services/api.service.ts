@@ -269,7 +269,7 @@ const ApiService: ServiceSchema = {
               .on("data", (chunk: string) => {
                 body.push(chunk);
               })
-              .on("end", () => {
+              .on("end", async () => {
                 //@ts-ignore
                 let bodyString = Buffer.concat(body).toString();
 

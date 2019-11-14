@@ -51,10 +51,13 @@ const EmailService: ServiceSchema = {
       firstName: string,
       email: string,
     }) {
-      this.send({
+      this.actions.send({
         to: user.email,
-        subject: `Hello ${user.firstName}!`,
-        html: "Welcome to Catalyst."
+        template: "welcome",
+        data: {
+          firstName: user.firstName,
+          host: process.env.HOST_NAME
+        }
       });
     },
   },
