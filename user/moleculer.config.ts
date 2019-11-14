@@ -131,7 +131,7 @@ const brokerConfig: BrokerOptions = {
 
 	//  Tracing support setup as of moleculer 0.14
 	tracing: {
-        enabled: true,
+        enabled: Boolean(process.env.TRACING_ENABLED) || false,
         exporter: {
             type: "Jaeger",
             options: {
