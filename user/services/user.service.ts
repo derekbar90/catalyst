@@ -249,8 +249,40 @@ const UserService: ServiceSchema = {
             "ERR_PASSWORD_RESET_INVALID"
           );
         } else {
-          return await this.adapter.updateById(ctx.params.id, { password: await bcrypt.hash(ctx.params.password, 10) })
+          const passwordHash = await bcrypt.hash(ctx.params.password, 10);
+          return await this.adapter.updateById(ctx.params.id, {
+            $set: {
+              password: passwordHash
+            }
+          })
         }
+      }
+    },
+    validatePassword: {
+      params: {
+        email: { type: "email" },
+        password: { type: "string", min: 7 },
+      },
+      async handler(
+        ctx: Context<{
+          email: string,
+          password: string,
+        }>
+      ) {
+        
+        const userLookup = await this.getUserByEmail(ctx, ctx.params.email);
+
+        if (!userLookup) {
+          throw new Errors.MoleculerClientError(
+            "Email does not match passowrd.",
+            400,
+            "ERR_USER_UNKNOWN"
+          );
+        }
+
+        const isValid = await bcrypt.compare(ctx.params.password, userLookup.password);
+
+        return isValid
       }
     },
   },

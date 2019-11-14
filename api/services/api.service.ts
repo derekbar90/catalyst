@@ -124,15 +124,14 @@ const ApiService: ServiceSchema = {
                   csrf?: string;
                 } = querystring.parse(bodyString);
 
-                // var challenge = body.challenge;
+                const isPasswordValid = req.$ctx.call('user.validatePassword', {
+                  email: parsedBody.email,
+                  password: parsedBody.password
+                })
 
-                // Let's check if the user provided valid credentials. Of course, you'd use a database or some third-party service
-                // for this!
+                // Let's check if the user provided valid credentials
                 if (
-                  !(
-                    parsedBody.email === "foo@bar.com" &&
-                    parsedBody.password === "foobar"
-                  )
+                  !isPasswordValid
                 ) {
                   // Looks like the user provided invalid credentials, let's show the ui again...
                   var fn = pug.compileFile(`./pages/login.pug`, {});
