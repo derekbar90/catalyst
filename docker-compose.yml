@@ -22,6 +22,9 @@ services:
     environment:
       SERVICES: verification_code
       DB_NAME: verification_code
+      NODE_INSPECT_PORT: 9033
+    ports:
+      - "9033:9033"
     links:
       - nats
       - redis
@@ -29,7 +32,6 @@ services:
       - nats
       - redis
       - postgresd
-
 
   # service container
   email:
@@ -53,6 +55,9 @@ services:
       EMAIL_DOMAIN: ${EMAIL_DOMAIN}
       EMAIL_API_KEY: ${EMAIL_API_KEY}
       EMAIL_PROVIDER: ${EMAIL_PROVIDER}
+      NODE_INSPECT_PORT: 9031
+    ports:
+      - "9031:9031"
     links:
       - nats
       - redis
@@ -124,7 +129,11 @@ services:
       SERVICES: api
       PORT: 3000
       LOGLEVEL: trace
+      HOST_NAME: ${HOST_NAME}
       HYDRA_ADMIN_URL: http://hydra:4445
+      NODE_INSPECT_PORT: 9030
+    ports:
+      - "9030:9030"
     links:
       - nats
       - redis
@@ -161,6 +170,9 @@ services:
     environment:
       SERVICES: user
       DB_NAME: user
+      NODE_INSPECT_PORT: 9032
+    ports:
+      - "9032:9032"
     links:
       - nats
       - redis

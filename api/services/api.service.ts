@@ -1,4 +1,4 @@
-import { ServiceSchema } from "moleculer";
+import { Errors, ServiceSchema } from "moleculer";
 import ApiGateway = require("moleculer-web");
 const { ApolloService } = require("moleculer-apollo-server");
 const Kind = require("graphql/language").Kind;
@@ -57,7 +57,7 @@ const ApiService: ServiceSchema = {
       {
         path: "/login",
         aliases: {
-          "GET /": (req: any, res: any, next: any) => {
+          "GET /"(req: any, res: any, next: any) {
             let login_challenge: string = null;
             if (req.$params.login_challenge) {
               login_challenge = req.$params.login_challenge;
@@ -89,15 +89,9 @@ const ApiService: ServiceSchema = {
                   }
 
                   // If authentication can't be skipped we MUST show the login UI.
-                  var fn = pug.compileFile(`./pages/login.pug`, {});
-                  const html = fn({
+                  req.$service.buildPageResponse(res, `login`, {
                     challenge: login_challenge
                   });
-                  res.writeHead(200, {
-                    "Content-Type": "text/html"
-                  });
-                  res.write(html);
-                  res.end();
                 })
                 // This will handle any error that happens when making HTTP calls to hydra
                 .catch(function(error: any) {
@@ -106,7 +100,7 @@ const ApiService: ServiceSchema = {
             } else {
               res.writeHead(302, {
                 Location:
-                  "https://funk.derekbarrera.com/oauth/oauth2/auth?grant_type=client_credentials&scope=offline&client_id=catalyst_mobile&redirect_uri=https://funk.derekbarrera.com/&response_type=code&state=badassmofo"
+                  `https://${process.env.HOST_NAME}/oauth/oauth2/auth?grant_type=client_credentials&scope=offline&client_id=catalyst_admin&redirect_uri=https://${process.env.HOST_NAME}/admin/callback&response_type=code&state=badassmofo`
               });
               res.end();
             }
@@ -121,8 +115,7 @@ const ApiService: ServiceSchema = {
               })
               .on("end", () => {
                 //@ts-ignore
-                let bodyString = Buffer.from(body.concat('')).toString();
-                // BEGINNING OF NEW STUFF
+                let bodyString = Buffer.concat(body).toString();
 
                 const parsedBody: {
                   challenge: string;
@@ -251,8 +244,7 @@ const ApiService: ServiceSchema = {
                   }
 
                   // Looks like the user provided invalid credentials, let's show the ui again...
-                  var fn = pug.compileFile(`./pages/consent.pug`, {});
-                  const html = fn({
+                  req.$service.buildPageResponse(res, `consent`, {
                     challenge: consent_challenge,
                     // We have a bunch of data available from the response, check out the API docs to find what these values mean
                     // and what additional data you have available.
@@ -260,11 +252,6 @@ const ApiService: ServiceSchema = {
                     user: response.subject,
                     client: response.client
                   });
-                  res.writeHead(200, {
-                    "Content-Type": "text/html"
-                  });
-                  res.write(html);
-                  res.end();
                 })
                 // This will handle any error that happens when making HTTP calls to hydra
                 .catch(function(error: Error) {
@@ -273,7 +260,7 @@ const ApiService: ServiceSchema = {
             } else {
               res.writeHead(302, {
                 Location:
-                  "https://funk.derekbarrera.com/oauth/oauth2/auth?grant_type=client_credentials&scope=offline&client_id=catalyst_mobile&redirect_uri=https://funk.derekbarrera.com/login/&response_type=code&state=badassmofo"
+                  "https://funk.derekbarrera.com/oauth/oauth2/auth?grant_type=client_credentials&scope=offline&client_id=catalyst_admin&redirect_uri=https://funk.derekbarrera.com/admin/callback&response_type=code&state=badassmofo"
               });
               res.end();
             }
@@ -288,7 +275,7 @@ const ApiService: ServiceSchema = {
               })
               .on("end", () => {
                 //@ts-ignore
-                let bodyString = Buffer.from(body.concat('')).toString();
+                let bodyString = Buffer.concat(body).toString();
 
                 const parsedBody: {
                   challenge: string;
@@ -382,173 +369,167 @@ const ApiService: ServiceSchema = {
       {
         path: "/forgot_password",
         aliases: {
-          "GET /": (req: any, res: any, next: any) => {
-            let consent_challenge: string = null;
-            if (req.$params.consent_challenge) {
-              consent_challenge = req.$params.consent_challenge;
+          "GET /"(req: any, res: any, next: any) {
+            let code: string = null;
+            if (req.$params.code) {
+              code = req.$params.code;
 
-              hydra
-                .getConsentRequest(consent_challenge)
-                // This will be called if the HTTP request was successful
-                .then(function(response: any) {
-                  // If a user has granted this application the requested scope, hydra will tell us to not show the UI.
-                  if (response.skip) {
-                    // You can apply logic here, for example grant another scope, or do whatever...
-                    // ...
-
-                    // Now it's time to grant the consent request. You could also deny the request if something went terribly wrong
-                    return hydra
-                      .acceptConsentRequest(consent_challenge, {
-                        // We can grant all scopes that have been requested - hydra already checked for us that no additional scopes
-                        // are requested accidentally.
-                        grant_scope: response.requested_scope,
-
-                        // ORY Hydra checks if requested audiences are allowed by the client, so we can simply echo this.
-                        grant_access_token_audience:
-                          response.requested_access_token_audience,
-
-                        // The session allows us to set session data for id and access tokens
-                        session: {
-                          // This data will be available when introspecting the token. Try to avoid sensitive information here,
-                          // unless you limit who can introspect tokens.
-                          // access_token: { foo: 'bar' },
-                          // This data will be available in the ID token.
-                          // id_token: { baz: 'bar' },
-                        }
-                      })
-                      .then(function(response: { redirect_to: string }) {
-                        // All we need to do now is to redirect the user back to hydra!
-                        res.writeHead(302, {
-                          Location: response.redirect_to
-                        });
-                        res.end();
-                      });
-                  }
-
-                  // Looks like the user provided invalid credentials, let's show the ui again...
-                  var fn = pug.compileFile(`./pages/consent.pug`, {});
-                  const html = fn({
-                    challenge: consent_challenge,
-                    // We have a bunch of data available from the response, check out the API docs to find what these values mean
-                    // and what additional data you have available.
-                    requested_scope: response.requested_scope,
-                    user: response.subject,
-                    client: response.client
-                  });
-                  res.writeHead(200, {
-                    "Content-Type": "text/html"
-                  });
-                  res.write(html);
-                  res.end();
-                })
-                // This will handle any error that happens when making HTTP calls to hydra
-                .catch(function(error: Error) {
-                  next(error);
-                });
-            } else {
-              res.writeHead(302, {
-                Location:
-                  "https://funk.derekbarrera.com/oauth/oauth2/auth?grant_type=client_credentials&scope=offline&client_id=catalyst_mobile&redirect_uri=https://funk.derekbarrera.com/login/&response_type=code&state=badassmofo"
+              // Looks like the user provided invalid credentials, let's show the ui again...
+              req.$service.buildPageResponse(res, `forgot_password`, {
+                code
               });
-              res.end();
+            } else {
+              req.$service.buildPageResponse(res, `forgot_password`, {});
             }
           },
           "POST /": async (req: any, res: any, next: any) => {
             let body: string[] = [];
-            await req
+            const parsedBody = await req
               .on("data", (chunk: string) => {
                 body.push(chunk);
               })
-              .on("end", () => {
-                let bodyString = Buffer.from(body.concat('')).toString();
+              .on("end", async () => {
+                //@ts-ignore
+                let bodyString = Buffer.concat(body).toString();
 
                 const parsedBody: {
-                  challenge: string;
                   email: string;
-                  password: string;
-                  remember?: boolean;
-                  csrf?: string;
-                  submit?: string;
-                  grant_scope?: string[];
                 } = querystring.parse(bodyString);
 
-                // Let's see if the user decided to accept or reject the consent request..
-                if (parsedBody.submit === "Deny access") {
-                  // Looks like the consent request was denied by the user
-                  return (
-                    hydra
-                      .rejectConsentRequest(parsedBody.challenge, {
-                        error: "access_denied",
-                        error_description:
-                          "The resource owner denied the request"
-                      })
-                      .then(function(response: { redirect_to: string }) {
-                        // All we need to do now is to redirect the browser back to hydra!
-                        res.writeHead(302, {
-                          Location: response.redirect_to
-                        });
-                        res.end();
-                      })
-                      // This will handle any error that happens when making HTTP calls to hydra
-                      .catch(function(error: Error) {
-                        next(error);
-                      })
-                  );
-                }
+                const userLookup = await req.$ctx.call("user.find", {
+                  limit: 1,
+                  query: { email: parsedBody.email }
+                });
 
-                var grant_scope = parsedBody.grant_scope;
-                if (!Array.isArray(grant_scope)) {
-                  grant_scope = [grant_scope];
-                }
-
-                // Seems like the user authenticated! Let's tell hydra...
-                hydra
-                  .getConsentRequest(parsedBody.challenge)
-                  // This will be called if the HTTP request was successful
-                  .then(function(response: any) {
-                    return hydra
-                      .acceptConsentRequest(parsedBody.challenge, {
-                        // We can grant all scopes that have been requested - hydra already checked for us that no additional scopes
-                        // are requested accidentally.
-                        grant_scope: grant_scope,
-
-                        // The session allows us to set session data for id and access tokens
-                        session: {
-                          // This data will be available when introspecting the token. Try to avoid sensitive information here,
-                          // unless you limit who can introspect tokens.
-                          access_token: { foo: "bar" },
-                          // This data will be available in the ID token.
-                          id_token: { baz: "bar" }
-                        },
-
-                        // ORY Hydra checks if requested audiences are allowed by the client, so we can simply echo this.
-                        grant_access_token_audience:
-                          response.requested_access_token_audience,
-
-                        // This tells hydra to remember this consent request and allow the same client to request the same
-                        // scopes from the same user, without showing the UI, in the future.
-                        remember: Boolean(parsedBody.remember),
-
-                        // When this "remember" sesion expires, in seconds. Set this to 0 so it will never expire.
-                        remember_for: 3600
-                      })
-                      .then(function(response: { redirect_to: string }) {
-                        // All we need to do now is to redirect the user back to hydra!
-
-                        console.log(`redirect_ending:`, response.redirect_to);
-
-                        res.writeHead(302, {
-                          Location: response.redirect_to
-                        });
-                        res.end();
-                      });
-                  })
-                  // This will handle any error that happens when making HTTP calls to hydra
-                  .catch(function(error: Error) {
-                    next(error);
+                if (userLookup == null || userLookup.length == 0) {
+                  req.$service.buildPageResponse(res, `forgot_password`, {
+                    error: "User with provided email could not be found"
                   });
+                } else {
+                  const forgotPasswordCode = await req.$ctx.call(
+                    "verification_code.getCode",
+                    {
+                      userId: userLookup[0].id,
+                      type: "PASSWORD_RESET"
+                    }
+                  );
+  
+                  await req.$ctx.call('mail.send', { 
+                    to: userLookup[0].email, 
+                    template: "forgot_password",
+                    data: {
+                        username: userLookup[0].username,
+                        userId: userLookup[0].id,
+                        verifyToken: forgotPasswordCode,
+                        host: process.env.HOST_NAME
+                    }
+                  });
+                  
+                  req.$service.buildPageResponse(res, `forgot_password`, {
+                    success: 'An email has been sent.'
+                  });
+                }
+                
               });
-          }
+          },
+          "GET /reset": async (req: any, res: any, next: any) => {
+            let code: string = null;
+            let id: string = null;
+
+            if (req.$params.code) {
+              code = req.$params.code;
+            }
+            if (req.$params.id) {
+              id = req.$params.id;
+            }
+
+            let params: {
+              code: string,
+              id: string,
+              error?: string
+            }= {
+              code,
+              id
+            };
+
+            try {
+              const isValidCodeForUser = await req.$ctx.call(
+                "verification_code.verifyCode",
+                {
+                  code,
+                  userId: id,
+                  type: "PASSWORD_RESET"
+                }
+              );
+  
+              if (!isValidCodeForUser) {
+                params = {
+                  ...params,
+                  error: 'Invalid password reset link'
+                }
+              }
+            } catch (error) {
+                params = {
+                  ...params,
+                  error: error.message
+                }
+            }
+
+            req.$service.buildPageResponse(res, params.error ? `forgot_password` : `forgot_password_reset`, params);
+            
+          },
+          "POST /reset": async (req: any, res: any, next: any) => {
+            let body: string[] = [];
+            const parsedBody = await req
+              .on("data", (chunk: string) => {
+                body.push(chunk);
+              })
+              .on("end", async () => {
+                //@ts-ignore
+                let bodyString = Buffer.concat(body).toString();
+
+                const parsedBody: {
+                  id: string;
+                  code: string;
+                  password: string,
+                } = querystring.parse(bodyString);
+
+                let params: {
+                  code: string,
+                  id: string,
+                  error?: string
+                }= {
+                  code: parsedBody.code,
+                  id: parsedBody.id
+                };
+                
+                try {
+                  const isValidCodeForUser = await req.$ctx.call(
+                    "verification_code.verifyCode",
+                    {
+                      code: parsedBody.code,
+                      userId: parsedBody.id,
+                      type: "PASSWORD_RESET"
+                    }
+                  );
+      
+                  if (!isValidCodeForUser) {
+                    params = {
+                      ...params,
+                      error: 'Invalid password reset link'
+                    }
+                  }
+                } catch (error) {
+                    params = {
+                      ...params,
+                      error: error.message
+                    }
+                }
+    
+                req.$service.buildPageResponse(res, params.error ? `forgot_password` : `forgot_password_reset`, params);
+                
+              });
+          },
         }
       },
       {
@@ -620,7 +601,7 @@ const ApiService: ServiceSchema = {
             } else {
               res.writeHead(302, {
                 Location:
-                  "https://funk.derekbarrera.com/oauth/oauth2/auth?grant_type=client_credentials&scope=offline&client_id=catalyst_mobile&redirect_uri=https://funk.derekbarrera.com/login/&response_type=code&state=badassmofo"
+                  "https://funk.derekbarrera.com/oauth/oauth2/auth?grant_type=client_credentials&scope=offline&client_id=catalyst_admin&redirect_uri=https://funk.derekbarrera.com/admin/callback&response_type=code&state=badassmofo"
               });
               res.end();
             }
@@ -635,7 +616,7 @@ const ApiService: ServiceSchema = {
               })
               .on("end", () => {
                 //@ts-ignore
-                let bodyString = Buffer.from(body.concat('')).toString();
+                let bodyString = Buffer.concat(body).toString();
 
                 const parsedBody: {
                   challenge: string;
@@ -740,6 +721,14 @@ const ApiService: ServiceSchema = {
         options
       );
       return fn(params);
+    },
+    buildPageResponse(res: any, page: string, payload: {}): any {
+      const html = this.renderPage(page, payload, {});
+      res.writeHead(200, {
+        "Content-Type": "text/html"
+      });
+      res.write(html);
+      return res.end();
     }
   }
 };

@@ -6,6 +6,42 @@
 	"configurations": [
 		{
 			"type": "node",
+			"request": "attach",
+			"name": "Api",
+			"port": 9030,
+			"skipFiles": [
+				"<node_internals>/**"
+			]
+		},
+		{
+			"type": "node",
+			"request": "attach",
+			"name": "Verification Code",
+			"port": 9033,
+			"skipFiles": [
+				"<node_internals>/**"
+			]
+		},
+		{
+			"type": "node",
+			"request": "attach",
+			"name": "Email",
+			"port": 9031,
+			"skipFiles": [
+				"<node_internals>/**"
+			]
+		},
+		{
+			"type": "node",
+			"request": "attach",
+			"name": "User",
+			"port": 9032,
+			"skipFiles": [
+				"<node_internals>/**"
+			]
+		},
+		{
+			"type": "node",
 			"request": "launch",
 			"name": "Debug",
 			"program": "${workspaceRoot}/node_modules/moleculer/bin/moleculer-runner.js",
