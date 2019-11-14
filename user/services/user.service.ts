@@ -213,96 +213,44 @@ const UserService: ServiceSchema = {
       }
     },
 
-    forgotPassword: {
+    changePassword: {
       params: {
-        email: { type: "email" },
+        id: { type: "uuid" },
+        code: { type: "uuid" },
+        password: { type: "string", min: 7 },
       },
       graphql: {
-        mutation: `forgotPassword(
-						email: String!
+        mutation: `changePassword(
+						id: String!,
+						code: String!
+						password: String!
 					): User`
       },
       async handler(
         ctx: Context<{
-          username: string;
-          password: string;
-          email: string;
-          firstName: string;
-          lastName: string;
-          avatar: string;
+          id: string,
+          code: string,
+          password: string,
         }>
       ) {
-        let entity = <IUserModel>{};
-
-        // Verify email, if found then fail outright, no need to
-        // look up the username etc or assign an account
-        let foundEmail = await this.getUserByEmail(ctx, ctx.params.email);
-        if (foundEmail) {
-          throw new Errors.MoleculerClientError(
-            "Email has already been registered.",
-            400,
-            "ERR_EMAIL_EXISTS"
-          );
-        }
-
-        if (!ctx.params.username) {
-          throw new Errors.MoleculerClientError(
-            "Username can't be empty.",
-            400,
-            "ERR_USERNAME_EMPTY"
-          );
-        }
-
-        let foundUsername = await this.getUserByUsername(
-          ctx,
-          ctx.params.username
+        const isValidCodeForUser = await ctx.call(
+          "verification_code.verifyCode",
+          {
+            code: ctx.params.code,
+            userId: ctx.params.id,
+            type: "PASSWORD_RESET_ACTION"
+          }
         );
-        if (foundUsername) {
+
+        if (!isValidCodeForUser) {
           throw new Errors.MoleculerClientError(
-            "Username has already been registered.",
-            400,
-            "ERR_USERNAME_EXISTS"
+            'Password reset integrity could not be determined',
+            500,
+            "ERR_PASSWORD_RESET_INVALID"
           );
-        }
-
-        // Set basic data
-        entity.email = ctx.params.email;
-        entity.firstName = ctx.params.firstName;
-        entity.lastName = ctx.params.lastName;
-        entity.plan = "FREE";
-        entity.avatar = ctx.params.avatar;
-        entity.socialLinks = {};
-        entity.verified = true;
-        entity.status = 1;
-
-        if (!entity.avatar) {
-          // Default avatar as Gravatar
-          const md5 = crypto
-            .createHash("md5")
-            .update(entity.email)
-            .digest("hex");
-          entity.avatar = `https://gravatar.com/avatar/${md5}?s=64&d=robohash`;
-        }
-
-        // Generate passwordless token or hash password
-        if (ctx.params.password) {
-          entity.password = await bcrypt.hash(ctx.params.password, 10);
         } else {
-          throw new Errors.MoleculerClientError(
-            "Password can't be empty.",
-            400,
-            "ERR_PASSWORD_EMPTY"
-          );
+          return await this.adapter.updateById(ctx.params.id, { password: await bcrypt.hash(ctx.params.password, 10) })
         }
-
-        entity.username = ctx.params.username;
-
-        // Create new user
-        const user = await this.adapter.insert(entity);
-
-        this.broker.broadcast("user.registered", { ...entity }, "mail");
-
-        return user;
       }
     },
   },

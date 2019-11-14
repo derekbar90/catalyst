@@ -27,7 +27,7 @@ const modelDefinition = {
     },
     type: {
       type: DataTypes.ENUM,
-      values: ['USER_ACCOUNT', 'PASSWORD_RESET', 'PHONE_NUMBER'],
+      values: ['USER_ACCOUNT', 'PASSWORD_RESET_REQUEST', 'PASSWORD_RESET_ACTION', 'PHONE_NUMBER'],
       allowNull: false
     },
 

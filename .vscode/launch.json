@@ -3,42 +3,54 @@
 	// Hover to view descriptions of existing attributes.
 	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
 	"version": "0.2.0",
-	"configurations": [
+	"configurations": [		
 		{
 			"type": "node",
 			"request": "attach",
 			"name": "Api",
+			"protocol": "auto",
+			"address": "localhost",
 			"port": 9030,
-			"skipFiles": [
-				"<node_internals>/**"
-			]
+			"remoteRoot": "/app/",
+			"localRoot": "${workspaceRoot}/api/",
+			"sourceMaps": true,
+			"restart": true,
 		},
 		{
 			"type": "node",
 			"request": "attach",
 			"name": "Verification Code",
+			"protocol": "auto",
+			"address": "localhost",
 			"port": 9033,
-			"skipFiles": [
-				"<node_internals>/**"
-			]
+			"remoteRoot": "/app/",
+			"localRoot": "${workspaceRoot}/verification_code/",
+			"sourceMaps": true,
+			"restart": true,
 		},
 		{
 			"type": "node",
 			"request": "attach",
 			"name": "Email",
+			"protocol": "auto",
+			"address": "localhost",
 			"port": 9031,
-			"skipFiles": [
-				"<node_internals>/**"
-			]
+			"remoteRoot": "/app/",
+			"localRoot": "${workspaceRoot}/email/",
+			"sourceMaps": true,
+			"restart": true,
 		},
 		{
 			"type": "node",
 			"request": "attach",
 			"name": "User",
+			"protocol": "auto",
+			"address": "localhost",
 			"port": 9032,
-			"skipFiles": [
-				"<node_internals>/**"
-			]
+			"remoteRoot": "/app/",
+			"localRoot": "${workspaceRoot}/user/",
+			"sourceMaps": true,
+			"restart": true,
 		},
 		{
 			"type": "node",
