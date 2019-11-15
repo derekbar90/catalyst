@@ -8,6 +8,7 @@ services:
       context: ./verification_code
     image: catalyst_verification_code
     env_file: docker-compose.env
+    container_name: verification_code
     networks:
       - catalyst-backend
     volumes:
@@ -23,7 +24,7 @@ services:
       SERVICES: verification_code
       DB_NAME: verification_code
       NODE_INSPECT_PORT: 9033
-      TRACING_ENABLED: true
+      TRACING_ENABLED: 'true'
     ports:
       - "9033:9033"
     links:
@@ -40,6 +41,7 @@ services:
       context: ./email
     image: catalyst_email
     env_file: docker-compose.env
+    container_name: email
     networks:
       - catalyst-backend
     volumes:
@@ -57,7 +59,7 @@ services:
       EMAIL_API_KEY: ${EMAIL_API_KEY}
       EMAIL_PROVIDER: ${EMAIL_PROVIDER}
       NODE_INSPECT_PORT: 9031
-      TRACING_ENABLED: true
+      TRACING_ENABLED: 'true'
     ports:
       - "9031:9031"
     links:
@@ -133,6 +135,7 @@ services:
       LOGLEVEL: trace
       HOST_NAME: ${HOST_NAME}
       HYDRA_ADMIN_URL: http://hydra:4445
+      KETO_ADMIN_URL: http://keto:4466
       NODE_INSPECT_PORT: 9030
     ports:
       - "9030:9030"
@@ -140,11 +143,14 @@ services:
       - nats
       - redis
       - hydra
+      - keto
     depends_on:
       - nats
       - redis
       - postgresd
       - traefik
+      - hydra
+      - keto
     labels:
       - "traefik.enable=true"
       - "traefik.backend=api"
@@ -173,7 +179,7 @@ services:
       SERVICES: user
       DB_NAME: user
       NODE_INSPECT_PORT: 9032
-      TRACING_ENABLED: true
+      TRACING_ENABLED: 'true'
     ports:
       - "9032:9032"
     links:
@@ -303,6 +309,71 @@ services:
       - "traefik.hydra.backend=oauth"
       - "traefik.hydra.port=4444" # callback
       - "traefik.hydra.frontend.rule=Host:${HOST_NAME};PathPrefixStrip:/oauth/"
+
+  keto-migrate:
+    image: oryd/keto:v0.3.6
+    networks:
+      - catalyst-backend
+    links:
+      - postgresd:postgresd
+    environment:
+      - LOG_LEVEL=debug
+    command: migrate sql postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgresd:5432/${POSTGRES_DB}?sslmode=disable&max_conns=20&max_idle_conns=4
+    restart: on-failure
+
+  keto:
+    image: oryd/keto:v0.3.6
+    container_name: keto
+    networks:
+      - catalyst-backend
+    ports:
+      - "4466:4466"
+    command: serve
+    links:
+      - postgresd:postgresd
+    depends_on:
+      - keto-migrate
+    environment:
+      - LOG_LEVEL=debug
+      - PORT=4466
+      - DSN=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgresd:5432/${POSTGRES_DB}?sslmode=disable
+    restart: on-failure
+
+  configurator:
+    build:
+      context: ./configurator
+      dockerfile: Dockerfile
+      args:
+        - HYDRA_VERSION=$HYDRA_VERSION
+        - KETO_VERSION=$KETO_VERSION
+        - OATHKEEPER_VERSION=$OATHKEEPER_VERSION
+    depends_on:
+      - hydra
+      - keto
+      # - oathkeeper-api Omit until oauthkeeper is needed
+    networks:
+      - catalyst-backend
+    environment:
+      # All of these URLs MUST NOT end with a trailing slash. This is very important!
+      - HYDRA_URL=http://hydra:4444
+      - HYDRA_ADMIN_URL=http://hydra:4445
+      - KETO_URL=http://keto:4466
+      # - RESOURCE_SERVER_URL=http://resource-server:4478 Omit until oauthkeeper is needed
+
+      # This sets the prefix for all resource, action, and subject names. Be aware that this prefix is automatically
+      # applied to all OAuth2 Clients as well.
+      - "HYDRA_SUBJECT_PREFIX=subjects:hydra:"
+      - "HYDRA_RESOURCE_PREFIX=resources:hydra:"
+      - "HYDRA_ACTION_PREFIX=actions:hydra:"
+      - "OATHKEEPER_RESOURCE_PREFIX=resources:oathkeeper:"
+      - "OATHKEEPER_ACTION_PREFIX=actions:oathkeeper:"
+      - "KETO_RESOURCE_PREFIX=resources:keto:"
+      - "KETO_ACTION_PREFIX=actions:keto:"
+
+      - OATHKEEPER_HYDRA_JWK_SET_ID=jwk:oathkeeper
+      - OATHKEEPER_HYDRA_CLIENT_ID=clients:oathkeeper-client
+      - OATHKEEPER_HYDRA_CLIENT_SECRET=dummy-oathkeeper-secret
+    restart: on-failure
 
   # tracing container for all tracing reporting
   # includes hydra and microservices
