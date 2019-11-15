@@ -31,6 +31,9 @@ start-stack-metrics:
 stop-stack:
 	docker-compose stop
 
+build-stack:
+	docker-compose build
+
 dbash:
 	docker-compose exec ${SVC} bash
 
