@@ -25,6 +25,7 @@
     "@types/jest": "^23.1.1",
     "@types/node": "^10.12.12",
     "cross-var": "^1.1.0",
+    "jaeger-client": "^3.17.1",
     "jest": "^25.0.0",
     "jest-cli": "^25.0.0",
     "moleculer-repl": "^0.6.1",
