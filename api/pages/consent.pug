@@ -5,6 +5,7 @@ block content
     form(action="",method="POST")
         input(type="hidden",name="challenge",value=challenge)
         input(type="hidden",name="_csrf",value=csrfToken)
+        input(type="hidden",name="email",value=user)
 
         if client.logo_uri
             img(src=client.logo_uri)
