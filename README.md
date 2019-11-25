@@ -184,3 +184,5 @@ EMAIL_PROVIDER==#############
 -- `GraphQL`: [GraphQL](https://graphql.org/)
 
 -- `PassportJS`: [PassportJS](https://passportjs.org)
+
+-- `Kubernetes Middleware` https://gist.github.com/icebob/c717ae22002b9ecaa4b253a67952da3a
