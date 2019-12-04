@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "My Moleculer microservices project",
   "scripts": {
-    "build": "tsc",
+    "build": "npm run grunt && tsc",
     "dev": "npm run nodemon & npm run start-service",
     "start-service": "cross-var node --inspect=0.0.0.0:$NODE_INSPECT_PORT -r ts-node/register ./node_modules/moleculer/bin/moleculer-runner.js --hot --repl --config moleculer.config.ts services/*.service.ts",
     "nodemon": "./node_modules/nodemon/bin/nodemon.js --config nodemon.json --exec npm run build",

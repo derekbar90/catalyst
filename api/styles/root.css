@@ -2,7 +2,10 @@
 @import "./custom-base-styles.css";
 
 @import "tailwindcss/components";
-@import "./custom-components.css";
+
+/* Custom Component Imports */
+@import "./components/buttons.css";
+@import "./components/layout.css";
 
 @import "tailwindcss/utilities";
 @import "./custom-utilities.css";
