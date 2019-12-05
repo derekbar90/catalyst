@@ -122,17 +122,17 @@ const brokerConfig: BrokerOptions = {
 
 	// Enable metrics function. More info: https://moleculer.services/docs/0.13/metrics.html
 	metrics: {
-		enabled: Boolean(process.env.METRICS_ENABLED) || false,
+		enabled: Boolean(process.env.METRICS_ENABLED) == true,
         reporter: [
             {
-                type: "Prometheus",
+				type: "Prometheus",
             }
         ]
     },
 
 	//  Tracing support setup as of moleculer 0.14
 	tracing: {
-        enabled: Boolean(process.env.TRACING_ENABLED) || false,
+        enabled: Boolean(process.env.TRACING_ENABLED) == true,
         exporter: {
             type: "Jaeger",
             options: {

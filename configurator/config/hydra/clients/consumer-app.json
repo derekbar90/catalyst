@@ -1,0 +1,9 @@
+{
+  "client_id": "catalyst_app",
+  "description": "This client will be used by a consumer application with PCKE + Auth Code",
+  "token_endpoint_auth_method": "none",
+  "redirect_uris": [
+    "org.catalyst.client:/oauthredirect"
+  ],
+  "scope": "offline_access offline openid"
+}

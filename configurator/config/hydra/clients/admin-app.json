@@ -1,0 +1,19 @@
+{
+  "client_id": "${ADMIN_OAUTH2_CLIENT_ID}",
+  "description": "This client will be used by the admin consumer application.",
+  "client_secret": "${ADMIN_OAUTH2_CLIENT_SECRET}",
+  "scope": "openid offline",
+  "grant_types": [
+    "authorization_code",
+    "refresh_token"
+  ],
+  "response_types": [
+    "code",
+    "token",
+    "id_token"
+  ],
+  "token_endpoint_auth_method": "client_secret_post",
+  "redirect_uris": [
+    "https://${HOST_NAME}/admin/callback"
+  ]
+}

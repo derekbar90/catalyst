@@ -36,6 +36,7 @@
     "typescript": "^3.2.2"
   },
   "dependencies": {
+    "jaeger-client": "^3.17.1",
     "handlebars": "^4.5.2",
     "ioredis": "^4.2.0",
     "moleculer": "next",

@@ -258,6 +258,7 @@ const UserService: ServiceSchema = {
         }
       }
     },
+    
     validatePassword: {
       params: {
         email: { type: "email" },

@@ -7,3 +7,5 @@ docker-compose*
 README.md
 LICENSE
 .vscode
+**/services/*.service.js
+**/services/*.service.js.map
