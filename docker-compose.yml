@@ -24,6 +24,7 @@ services:
       SERVICES: verification_code
       DB_NAME: verification_code
       NODE_INSPECT_PORT: 9033
+      TRACING_ENABLED: 'true'
     ports:
       - "9033:9033"
     links:
@@ -59,6 +60,7 @@ services:
       EMAIL_API_KEY: ${EMAIL_API_KEY}
       EMAIL_PROVIDER: ${EMAIL_PROVIDER}
       NODE_INSPECT_PORT: 9031
+      TRACING_ENABLED: 'true'
     ports:
       - "9031:9031"
     links:
@@ -181,6 +183,7 @@ services:
       SERVICES: user
       DB_NAME: user
       NODE_INSPECT_PORT: 9032
+      TRACING_ENABLED: 'true'
     ports:
       - "9032:9032"
     links:
