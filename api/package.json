@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "description": "My Moleculer microservices project",
   "scripts": {
-    "build": "tsc",
+    "build": "npm run grunt && tsc",
     "dev": "npm run nodemon & npm run start-service",
     "start-service": "cross-var node --inspect=0.0.0.0:$NODE_INSPECT_PORT -r ts-node/register ./node_modules/moleculer/bin/moleculer-runner.js --hot --repl --config moleculer.config.ts services/*.service.ts",
     "nodemon": "./node_modules/nodemon/bin/nodemon.js --config nodemon.json --exec npm run build",
+    "grunt": "grunt",
     "cli": "moleculer connect NATS",
     "start": "moleculer-runner services",
     "ci": "jest --watch",
@@ -24,11 +25,17 @@
     "@types/bluebird": "^3.5.24",
     "@types/jest": "^23.1.1",
     "@types/node": "^10.12.12",
+    "autoprefixer": "^9.7.3",
     "cross-var": "^1.1.0",
+    "cssnano": "^4.1.10",
+    "grunt": "^1.0.4",
+    "grunt-postcss": "^0.9.0",
     "jest": "^25.0.0",
     "jest-cli": "^25.0.0",
     "moleculer-repl": "^0.6.1",
     "nodemon": "^1.19.4",
+    "pixrem": "^5.0.0",
+    "postcss-import": "^12.0.1",
     "ts-jest": "^23.10.5",
     "ts-node": "^8.5.0",
     "tslint": "^5.11.0",
@@ -41,10 +48,11 @@
     "moleculer-apollo-server": "^0.1.3",
     "moleculer-db": "^0.8.2",
     "moleculer-web": "^0.9.0-beta6",
+    "nats": "^1.0.1",
     "node-fetch": "^2.6.0",
-    "querystring": "^0.2.0",
     "pug": "^2.0.4",
-    "nats": "^1.0.1"
+    "querystring": "^0.2.0",
+    "tailwindcss": "^1.1.4"
   },
   "engines": {
     "node": ">= 8.x.x"
@@ -68,5 +76,8 @@
         "tsConfig": "tsconfig.json"
       }
     }
+  },
+  "browserslist": {
+    "browsers": "last 2 versions"
   }
 }
