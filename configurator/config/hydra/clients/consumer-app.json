@@ -3,7 +3,9 @@
   "description": "This client will be used by a consumer application with PCKE + Auth Code",
   "token_endpoint_auth_method": "none",
   "redirect_uris": [
-    "org.catalyst.client:/oauthredirect"
+    "org.catalyst.client:/oauthredirect",
+    "https://localhost:19006",
+    "https://oauthdebugger.com/debug"
   ],
   "scope": "offline_access offline openid"
 }
