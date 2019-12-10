@@ -1,7 +1,7 @@
 extends layout
 
 block content
-    div(class="w-full max-w-xs")
+    div(class="w-full min-w-xs max-w-md mx-4")
         form(action="/login",method="POST",class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4")
             div(class="font-bold text-center text-xl mb-2") Catalyst Login
             div(class="mb-4")
@@ -23,7 +23,7 @@ block content
                 input(type="password",id="password",name="password",placeholder="password",class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline")
             div(class="mb-4 flex content-center items-center")
                 input(type="checkbox",id="remember",name="remember",value="1",class="shadow mr-2 leading-tight")
-                label(for="remember",class="md:w-2/3 block text-gray-500 font-bold") Remember me
+                label(for="remember",class=" block text-gray-500 font-bold") Remember me
             div(class="flex items-center justify-between")
                 input(type="submit",id="accept",value="Log in",class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline")
                 div(class="flex flex-col")

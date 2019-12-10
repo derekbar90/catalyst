@@ -203,6 +203,13 @@ const UserService: ServiceSchema = {
     },
 
     find: {
+      permissions: [
+        {
+          subject: "user",
+          action: "read",
+          flavor: "exact"
+        }
+      ],
       params: {
         limit: { type: "number" },
         offset: { type: "number", optional: true },
@@ -217,7 +224,7 @@ const UserService: ServiceSchema = {
       params: {
         id: { type: "uuid" },
         code: { type: "uuid" },
-        password: { type: "string", min: 7 },
+        password: { type: "string", min: 7 }
       },
       graphql: {
         mutation: `changePassword(
@@ -228,9 +235,9 @@ const UserService: ServiceSchema = {
       },
       async handler(
         ctx: Context<{
-          id: string,
-          code: string,
-          password: string,
+          id: string;
+          code: string;
+          password: string;
         }>
       ) {
         const isValidCodeForUser = await ctx.call(
@@ -244,7 +251,7 @@ const UserService: ServiceSchema = {
 
         if (!isValidCodeForUser) {
           throw new Errors.MoleculerClientError(
-            'Password reset integrity could not be determined',
+            "Password reset integrity could not be determined",
             500,
             "ERR_PASSWORD_RESET_INVALID"
           );
@@ -254,23 +261,22 @@ const UserService: ServiceSchema = {
             $set: {
               password: passwordHash
             }
-          })
+          });
         }
       }
     },
-    
+
     validatePassword: {
       params: {
         email: { type: "email" },
-        password: { type: "string", min: 7 },
+        password: { type: "string", min: 7 }
       },
       async handler(
         ctx: Context<{
-          email: string,
-          password: string,
+          email: string;
+          password: string;
         }>
       ) {
-        
         const userLookup = await this.getUserByEmail(ctx, ctx.params.email);
 
         if (!userLookup) {
@@ -281,11 +287,14 @@ const UserService: ServiceSchema = {
           );
         }
 
-        const isValid = await bcrypt.compare(ctx.params.password, userLookup.password);
+        const isValid = await bcrypt.compare(
+          ctx.params.password,
+          userLookup.password
+        );
 
-        return isValid
+        return isValid;
       }
-    },
+    }
   },
 
   /**

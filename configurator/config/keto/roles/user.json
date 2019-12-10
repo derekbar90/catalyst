@@ -1,7 +1,4 @@
 [{
-  "id":"user",
-  "members": [
-    "a@a.com",
-    "b@b.com"
-  ]
+  "id":"${KETO_SUBJECT_PREFIX}user",
+  "members": []
 }]

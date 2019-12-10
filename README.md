@@ -106,6 +106,8 @@ EMAIL_DOMAIN==############# !! mailgun specific, use nodemailer config for help 
 EMAIL_PROVIDER==#############
 ```
 
+`If you are running the catalyst-client/using the consumer-app.json config to power a app, you'll want to modify/update the callbacks per deployment env`
+
 #### Notes  
 
 `HOST_NAME`: hostname of choice to have the stack run on, if you do this: make sure that LetsEncrypt can do a hostname validation, certbot can be run via nginx if you need it but traefik will auto setup the SSL cert and hold it on a volumes in `traefik/acme.json`. You may need to set the permission on this folder to 600

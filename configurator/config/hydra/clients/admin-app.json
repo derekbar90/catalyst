@@ -1,5 +1,6 @@
 {
   "client_id": "${ADMIN_OAUTH2_CLIENT_ID}",
+  "client_name": "Catalyst Admin",
   "description": "This client will be used by the admin consumer application.",
   "client_secret": "${ADMIN_OAUTH2_CLIENT_SECRET}",
   "scope": "openid offline",

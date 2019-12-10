@@ -25,6 +25,11 @@ services:
       DB_NAME: verification_code
       NODE_INSPECT_PORT: 9033
       TRACING_ENABLED: 'true'
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "9033:9033"
     links:
@@ -138,7 +143,6 @@ services:
       LOGLEVEL: trace
       HOST_NAME: ${HOST_NAME}
       HYDRA_ADMIN_URL: http://hydra:4445
-      KETO_ADMIN_URL: http://keto:4466
       NODE_INSPECT_PORT: 9030
     ports:
       - "9030:9030"
@@ -184,6 +188,11 @@ services:
       DB_NAME: user
       NODE_INSPECT_PORT: 9032
       TRACING_ENABLED: 'true'
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "9032:9032"
     links:
@@ -214,11 +223,15 @@ services:
       - "6379:6379"
     networks:
       - catalyst-backend
+    volumes:
+      - redis-data:/data
+
 
   # database
   postgresd:
     image: postgres:9.6
     container_name: postgresd
+    env_file: docker-compose.env
     restart: always
     networks:
       - catalyst-backend
@@ -227,7 +240,6 @@ services:
       - ./postgres/data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    env_file: docker-compose.env
 
   # router for microservices
   traefik:
@@ -371,10 +383,13 @@ services:
       - "HYDRA_SUBJECT_PREFIX=subjects:hydra:"
       - "HYDRA_RESOURCE_PREFIX=resources:hydra:"
       - "HYDRA_ACTION_PREFIX=actions:hydra:"
+      
       - "OATHKEEPER_RESOURCE_PREFIX=resources:oathkeeper:"
       - "OATHKEEPER_ACTION_PREFIX=actions:oathkeeper:"
-      - "KETO_RESOURCE_PREFIX=resources:keto:"
-      - "KETO_ACTION_PREFIX=actions:keto:"
+      
+      - "KETO_RESOURCE_PREFIX=resources:${ROOT_ORG_IDENTIFIER}:"
+      - "KETO_ACTION_PREFIX=actions:${ROOT_ORG_IDENTIFIER}:"
+      - "KETO_SUBJECT_PREFIX=subjects:${ROOT_ORG_IDENTIFIER}:"
 
       - ADMIN_OAUTH2_CLIENT_ID=${ADMIN_OAUTH2_CLIENT_ID}
       - ADMIN_OAUTH2_CLIENT_SECRET=${ADMIN_OAUTH2_CLIENT_SECRET}
@@ -517,6 +532,8 @@ volumes:
   email_vol:
     driver: local
   admin_vol:
+    driver: local
+  redis-data:
     driver: local
   api_vol:
     driver: local

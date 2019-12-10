@@ -1,25 +1,26 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "background_color": "#ffffff",
+  "description": "A Neat Expo App",
+  "dir": "auto",
+  "display": "standalone",
+  "lang": "en",
+  "name": "Catalyst",
+  "orientation": "any",
+  "prefer_related_applications": true,
+  "related_applications": [],
+  "short_name": "Catalyst",
+  "start_url": ".",
+  "theme_color": "#4630EB",
   "icons": [
     {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "src": "/apple/icons/icon_192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
     },
     {
-      "src": "logo192.png",
-      "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "logo512.png",
-      "type": "image/png",
-      "sizes": "512x512"
+      "src": "/apple/icons/icon_512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
     }
-  ],
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  ]
 }
