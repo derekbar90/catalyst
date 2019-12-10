@@ -1,36 +1,26 @@
 extends layout
 
 block content
-    h1 An application requests access to your data!
-    form(action="",method="POST")
-        input(type="hidden",name="challenge",value=challenge)
-        input(type="hidden",name="_csrf",value=csrfToken)
-        input(type="hidden",name="email",value=user)
+    div(class="w-full min-w-xs max-w-md mx-4")
+        form(action="",method="POST",class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4")
+            input(type="hidden",name="challenge",value=challenge)
+            input(type="hidden",name="_csrf",value=csrfToken)
+            input(type="hidden",name="email",value=user)
+            div(class="mb-2")
+                span(class="font-bold text-left text-xl mb-2 break-all") Hi #{user}, 
+            span(class="font-bold text-left text-xl mb-2") <strong>#{client.client_name || client.client_id}</strong> wants access resources on your behalf and to:
+            div(class="my-8 flex flex-col items-start")
+                each scope in requested_scope
+                    div(class="mb-4 flex flex-row items-center")
+                        input(type="checkbox",id=scope,value=scope,name="grant_scope",class="shadow mr-2 leading-tight")
+                        label(for=scope,class=" block text-gray-500 font-bold") #{scope}
 
-        if client.logo_uri
-            img(src=client.logo_uri)
-
-        p.
-            Hi #{user}, application <strong>#{client.client_name || client.client_id}</strong> wants access resources on your behalf and to:
-
-        each scope in requested_scope
-            input(type="checkbox",id=scope,value=scope,name="grant_scope")
-            label(for=scope) #{scope}
-            br
-
-        p.
-            Do you want to be asked next time when this application wants to access your data? The application will
-            not be able to ask for more permissions without your consent.
-        ul
-            if client.policy_uri
-                li
-                    a(href=client.policy_uri) Policy
-            if client.tos_uri
-                li
-                    a(href=client.tos_uri) Terms of Service
-        p
-            input(type="checkbox",id="remember",name="remember",value="1")
-            label(for="remember") Do not ask me again
-        p
-            input(type="submit",id="accept",name="submit",value="Allow access")
-            input(type="submit",id="reject",name="submit",value="Deny access")
+            div(class="mb-4 flex flex-col content-center items-center")
+                p Do you want to be asked next time when this application wants to access your data? The application will not be able to ask for more permissions without your consent.
+                div(class="my-4 flex flex-row items-center")
+                    input(type="checkbox",id="remember",name="remember",value="1",class="shadow mr-2 leading-tight")
+                    label(for="remember",class=" block text-gray-500 font-bold") Do not ask me again
+            div(class="flex items-center justify-between")
+                input(type="submit",id="accept",name="submit",value="Allow access",class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline")
+                input(type="submit",id="reject",name="submit",value="Deny access",class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline")
+        p(class="text-center text-gray-500 text-xs") &copy;2019 Catalyst. All rights reserved.

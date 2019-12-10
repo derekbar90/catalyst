@@ -38,6 +38,7 @@
   },
   "dependencies": {
     "@types/bcrypt": "^3.0.0",
+    "@types/node-fetch": "^2.5.4",
     "bcrypt": "^3.0.6",
     "ioredis": "^4.14.1",
     "jaeger-client": "^3.17.1",
@@ -45,6 +46,7 @@
     "moleculer-db": "^0.8.2",
     "moleculer-db-adapter-sequelize": "^0.2.2",
     "nats": "^1.0.1",
+    "node-fetch": "^2.6.0",
     "pg": "^7.12.1",
     "pg-hstore": "2.3.3",
     "sequelize": "^5.21.2",

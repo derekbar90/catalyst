@@ -1,5 +1,6 @@
 {
   "client_id": "catalyst_app",
+  "client_name": "Catalyst Client",
   "description": "This client will be used by a consumer application with PCKE + Auth Code",
   "token_endpoint_auth_method": "none",
   "redirect_uris": [

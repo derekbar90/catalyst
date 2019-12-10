@@ -203,6 +203,13 @@ const UserService: ServiceSchema = {
     },
 
     find: {
+      permissions: [
+        {
+          subject: 'user',
+          action: 'read',
+          flavor: 'exact'
+        }
+      ],
       params: {
         limit: { type: "number" },
         offset: { type: "number", optional: true },

@@ -60,6 +60,33 @@ function put(flow: string, action: string, challenge: string, body: string | obj
     });
 }
 
+// A little helper that takes type (can be "login" or "consent") and a challenge and returns the response from ORY Hydra.
+function introspect(access_token: string) {
+  const url = new URL('/oauth2/introspect/', hydraUrl)
+
+  const params = new URLSearchParams();
+  params.append('token', access_token);
+
+  const request = nodeFetch(
+    url,
+    {
+      method: 'post',
+      body: params
+    });
+  return request
+    .then(function (res: any) {
+      if (res.status < 200 || res.status > 302) {
+        // This will handle any errors that aren't network related (network related errors are handled automatically)
+        return res.json().then(function (body: any) {
+          console.error('An error occurred while making a HTTP request: ', body)
+          return Promise.reject(new Error(body.error.message))
+        })
+      }
+
+      return res.json();
+    });
+}
+
 export const hydra = {
   // nodeFetches information on a login request.
   getLoginRequest: function (challenge: string) {
@@ -96,5 +123,9 @@ export const hydra = {
   // Reject a logout request.
   rejectLogoutRequest: function (challenge: string) {
     return put('logout', 'reject', challenge, {});
+  },
+  // Reject a logout request.
+  checkToken: function (accessToken: string) {
+    return introspect(accessToken);
   },
 };

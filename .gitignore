@@ -76,3 +76,5 @@ precache-manifest*
 **/moleculer.config.js
 **/moleculer.config.js.map
 api/public/*
+**/*.js.map
+**/*.js
