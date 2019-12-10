@@ -313,14 +313,18 @@ const ApiService: ServiceSchema = {
                   grant_scope = [grant_scope];
                 }
 
-                const userLookup = await req.$ctx.call("user.find", {
-                  limit: 1,
-                  query: { email: parsedBody.email }
-                }, {
-                  meta: {
-                    user: {}
+                const userLookup = await req.$ctx.call(
+                  "user.find",
+                  {
+                    limit: 1,
+                    query: { email: parsedBody.email }
+                  },
+                  {
+                    meta: {
+                      user: {}
+                    }
                   }
-                });
+                );
 
                 if (userLookup == null || userLookup.length == 0) {
                   req.$service.buildPageResponse(res, `forgot_password`, {
@@ -342,14 +346,14 @@ const ApiService: ServiceSchema = {
                           session: {
                             // This data will be available when introspecting the token. Try to avoid sensitive information here,
                             // unless you limit who can introspect tokens.
-                            access_token: { 
+                            access_token: {
                               id: userLookup[0].id,
-                              firstName: userLookup[0].firstName,
-                             },
+                              firstName: userLookup[0].firstName
+                            },
                             // This data will be available in the ID token.
-                            id_token: { 
+                            id_token: {
                               id: userLookup[0].id,
-                              firstName: userLookup[0].firstName,
+                              firstName: userLookup[0].firstName
                             }
                           },
 
@@ -608,51 +612,50 @@ const ApiService: ServiceSchema = {
       // Read the token from header
       let auth = req.headers["authorization"];
       if (auth && auth.startsWith("Bearer")) {
-          let token = auth.slice(7);
-          
-          const tokenIntrospection: {
-            active: boolean;
-            client_id: boolean;
-            scope: string;
-            sub: string;
-            ext: {
-              firstName: string,
-              id: string
-            }
-          } = await hydra.checkToken(token);
+        let token = auth.slice(7);
 
-          // Check the token
-          if (tokenIntrospection && tokenIntrospection.active) {
-              // Set the authorized user entity to `ctx.meta`
-              ctx.meta.user = { 
-                id: tokenIntrospection.ext.id, 
-                name: tokenIntrospection.ext.firstName 
-              };
-              console.log(tokenIntrospection.scope)
-              ctx.meta.roles = tokenIntrospection.scope.split(' ');
-              return ctx;
-          } else {
-              // Invalid token
-              throw new Errors.MoleculerClientError(
-                "Unauthorized: Invalid token provided",
-                401,
-                "ERR_UNAUTHORIZED"
-              );
-          }
+        const tokenIntrospection: {
+          active: boolean;
+          client_id: boolean;
+          scope: string;
+          sub: string;
+          ext: {
+            firstName: string;
+            id: string;
+          };
+        } = await hydra.checkToken(token);
 
+        // Check the token
+        if (tokenIntrospection && tokenIntrospection.active) {
+          // Set the authorized user entity to `ctx.meta`
+          ctx.meta.user = {
+            id: tokenIntrospection.ext.id,
+            name: tokenIntrospection.ext.firstName
+          };
+          console.log(tokenIntrospection.scope);
+          ctx.meta.roles = tokenIntrospection.scope.split(" ");
+          return ctx;
+        } else {
+          // Invalid token
+          throw new Errors.MoleculerClientError(
+            "Unauthorized: Invalid token provided",
+            401,
+            "ERR_UNAUTHORIZED"
+          );
+        }
       } else {
-          // resolving as a pass through without an error
-          // Permissions are checked by the user of a middleware which checks token scope. 
-          // If there is no token... then the call if it has zero permisions will be allowed
-          // If there is a token it's permissions are checked against the Keto service
-          return ctx
+        // resolving as a pass through without an error
+        // Permissions are checked by the user of a middleware which checks token scope.
+        // If there is no token... then the call if it has zero permisions will be allowed
+        // If there is a token it's permissions are checked against the Keto service
+        return ctx;
 
-          // If you want you can block all graphql calls by rejecting the promise.
-          // return Promise.reject(new Errors.MoleculerClientError(new Errors.MoleculerClientError(
-          //   "Unauthorized: No token provided",
-          //   400,
-          //   "ERR_NO_TOKEN"
-          // )));
+        // If you want you can block all graphql calls by rejecting the promise.
+        // return Promise.reject(new Errors.MoleculerClientError(new Errors.MoleculerClientError(
+        //   "Unauthorized: No token provided",
+        //   400,
+        //   "ERR_NO_TOKEN"
+        // )));
       }
     }
   }
