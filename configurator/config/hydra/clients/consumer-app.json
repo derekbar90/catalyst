@@ -6,7 +6,8 @@
   "redirect_uris": [
     "org.catalyst.client:/oauthredirect",
     "https://localhost:19006",
-    "https://oauthdebugger.com/debug"
+    "https://oauthdebugger.com/debug",
+    "https://${HOST_NAME}"
   ],
   "scope": "offline_access offline openid"
 }
