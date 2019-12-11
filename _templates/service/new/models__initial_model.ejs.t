@@ -1,5 +1,5 @@
 ---
-to: <%= locals.shouldAddDb ? <%=h.changeCase.snakeCase(name)%>/models/<%=h.changeCase.paramCase(name)%>.ts : null %>
+to: "<%= locals.shouldAddDb ? h.changeCase.snakeCase(name) + '/models/' + h.changeCase.paramCase(name) + '.ts' : null %>"
 ---
 import { DataTypes, Model, BuildOptions } from 'sequelize';
 import { dbSequalizeAdapter } from '../database/database';
