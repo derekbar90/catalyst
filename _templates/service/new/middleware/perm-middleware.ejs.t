@@ -33,6 +33,18 @@ type PermissionConfig = {
   flavor: string;
 };
 
+export class MissingUserContextError extends Errors.MoleculerClientError {
+  constructor (data: { [key: string]: string }) {
+    super("You have not provided the appropriate access token for this resource.", 401, "ERR_HAS_NO_ACCESS", data)
+  }
+}
+
+export class InsufficientPermissionsError extends Errors.MoleculerClientError {
+  constructor (data: { [key: string]: string }) {
+    super("This account does not have enough permissions for this action.", 401, "ERR_HAS_NO_PERMISSIONS", data)
+  }
+}
+
 export const PermissionsMiddleware = (
   options: PermissionsMiddlewareOptions
 ) => ({
@@ -91,10 +103,7 @@ export const PermissionsMiddleware = (
       ) => {
         const user = ctx.meta.user;
         if (user == undefined || user == null) {
-          throw new Errors.MoleculerClientError(
-            "You have not provided the appropriate access token for this resource.",
-            401,
-            "ERR_HAS_NO_ACCESS",
+          throw new MissingUserContextError(
             { action: action.name }
           );
         }
@@ -141,10 +150,7 @@ export const PermissionsMiddleware = (
             }
 
             if (res !== true) {
-              throw new Errors.MoleculerClientError(
-                "This account does not have enough permissions for this action.",
-                401,
-                "ERR_HAS_NO_PERMISSIONS",
+              throw new InsufficientPermissionsError(
                 { action: action.name }
               );
             }
