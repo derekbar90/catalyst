@@ -1,5 +1,5 @@
 ---
-to: <%=h.changeCase.snakeCase(name)%>/database/database.ts
+to: "<%= locals.shouldAddDb ? h.changeCase.snakeCase(name) + '/database/database.ts' : null %>"
 ---
 import { Sequelize } from "sequelize";
 

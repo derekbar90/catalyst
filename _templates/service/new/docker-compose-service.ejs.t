@@ -43,6 +43,7 @@ skip_if: <%= h.changeCase.snakeCase(name) -%>[^_]
     ports:
       - "<%=locals.nodeDebugPort%>:<%=locals.nodeDebugPort%>"
     depends_on:
+      - api
       - nats
       - redis
       - postgresd

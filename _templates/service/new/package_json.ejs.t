@@ -45,7 +45,6 @@ to: <%=h.changeCase.snakeCase(name)%>/package.json
     "moleculer": "next",
     "node-fetch": "^2.6.0",
     "nats": "^1.0.1",
-    "jaeger-client": "^3.17.1",
 <% if(locals.shouldExposeOnPort){ -%>
     "moleculer-web": "^0.8.5",
 <% } -%>
@@ -55,8 +54,9 @@ to: <%=h.changeCase.snakeCase(name)%>/package.json
     "pg": "^7.12.1",
     "pg-hstore": "2.3.3",
     "sequelize": "^5.21.2",
-    "sequelize-cli": "^5.5.1"
+    "sequelize-cli": "^5.5.1",
 <% } -%>
+    "jaeger-client": "^3.17.1"
   },
   "engines": {
     "node": ">= 8.x.x"

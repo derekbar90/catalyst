@@ -1,5 +1,5 @@
 ---
-to: <%=h.changeCase.snakeCase(name)%>/migrations/20191030192401-create-<%=h.changeCase.paramCase(name)%>
+to: "<%= locals.shouldAddDb ? h.changeCase.snakeCase(name) + '/migrations/20191030192401-create-' + h.changeCase.paramCase(name) + '.ts' : null %>"
 ---
 'use strict';
 
