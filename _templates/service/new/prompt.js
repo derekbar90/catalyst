@@ -147,7 +147,7 @@ module.exports = {
         }
       }
       
-      responsePayload = { ...responsePayload, ...answer, nodeDebugPort };
+      responsePayload = { ...responsePayload, ...answer };
     }
 
     const nodeDebugPort = Math.floor(Math.random() * (Math.floor(9999) - Math.ceil(9033) + 1)) + 9033;
