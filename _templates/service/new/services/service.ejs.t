@@ -5,7 +5,8 @@ to: <%=h.changeCase.snakeCase(name)%>/services/<%=h.changeCase.snakeCase(name)%>
 "use strict";
 import {Context, ServiceSchema} from "moleculer";
 // @ts-ignore
-import * as DbService from "moleculer-db";
+import DbService from "moleculer-db";
+import { <%=h.changeCase.pascalCase(name)%>SequelizeModel, I<%=h.changeCase.pascalCase(name)%>Model } from "../models/<%=h.changeCase.snakeCase(name)%>";
 
 const <%=h.changeCase.pascalCase(name)%>Service: ServiceSchema = {
 	name: "<%=h.changeCase.snakeCase(name)%>",
@@ -15,10 +16,25 @@ const <%=h.changeCase.pascalCase(name)%>Service: ServiceSchema = {
 	 */
 	settings: {
 <% if(locals.shouldAddDb){ -%>
-        fields: [
-            <% Object.keys(locals.dbTypeMap).forEach(function(type){ %>"<%-type%>",
-<% }); -%>
-        ],
+		fields: [
+      		"id",
+			"createdAt",
+			"updatedAt"
+		],
+    	graphql: {
+      		type: `
+			"""
+			This type describes a <%=h.changeCase.pascalCase(name)%> entity.
+			"""
+			type <%=h.changeCase.pascalCase(name)%> {
+				id: String!
+				createdAt: Date
+			}
+			`,
+      resolvers: {
+        <%=h.changeCase.pascalCase(name)%>: {}
+      }
+    }
 <% } -%>
     },
 
@@ -49,10 +65,32 @@ const <%=h.changeCase.pascalCase(name)%>Service: ServiceSchema = {
 				name: "string",
 			},
 			handler(ctx: Context<{ name: string }>) {
-				return `Welcome!, ${ctx.params.name}`;
+				return `Welcome, ${ctx.params.name}!`;
+			},
+		},
+		welcomePermissioned: {
+			permissions: [
+				{
+					subject: "user",
+					action: "read",
+					flavor: "exact"
+				}
+			],
+			params: {
+				name: "string",
+			},
+			handler(ctx: Context<{ name: string }>) {
+				return `Welcome, ${ctx.params.name}!`;
 			},
 		},
 	},
+
+<% if(locals.shouldAddDb){ -%>
+	model: {
+    	name: <%=h.changeCase.pascalCase(name)%>SequelizeModel.name,
+    	define: <%=h.changeCase.pascalCase(name)%>SequelizeModel.define
+  	},
+<% } -%>
 
 	/**
 	 * Events

@@ -26,6 +26,7 @@
     "@types/jest": "^23.1.1",
     "@types/node": "^10.17.2",
     "@types/validator": "^10.11.3",
+    "@types/node-fetch": "^2.5.4",
     "cross-var": "^1.1.0",
     "jest": "^25.0.0",
     "jest-cli": "^25.0.0",
@@ -38,7 +39,6 @@
   },
   "dependencies": {
     "@types/bcrypt": "^3.0.0",
-    "@types/node-fetch": "^2.5.4",
     "bcrypt": "^3.0.6",
     "ioredis": "^4.14.1",
     "jaeger-client": "^3.17.1",

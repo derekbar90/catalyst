@@ -3,7 +3,7 @@ to: <%=h.changeCase.snakeCase(name)%>/nodemon.json
 ---
 
 {
-  "restartable": false,
+  "restartable": true,
   "ignore": [
     ".git",
     "node_modules/**/node_modules",
