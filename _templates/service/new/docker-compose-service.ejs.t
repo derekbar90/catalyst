@@ -53,5 +53,6 @@ skip_if: <%= h.changeCase.snakeCase(name) -%>[^_]
       - "traefik.backend=<%=h.changeCase.snakeCase(name)%>"
 <% if(locals.shouldExposeOnPort){ -%>
       - "traefik.port=<%=port%>"
-<% } -%>
       - "traefik.frontend.rule=Host:${HOST_NAME}<% if(locals.shouldUseSubPath){ -%>PathPrefixStrip:/<%=path%>/<% } -%>"
+<% } -%>
+      
