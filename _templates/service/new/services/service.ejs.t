@@ -52,6 +52,21 @@ const <%=h.changeCase.pascalCase(name)%>Service: ServiceSchema = {
 				return `Welcome!, ${ctx.params.name}`;
 			},
 		},
+		welcomePermissioned: {
+			permissions: [
+				{
+					subject: "user",
+					action: "read",
+					flavor: "exact"
+				}
+			],
+			params: {
+				name: "string",
+			},
+			handler(ctx: Context<{ name: string }>) {
+				return `Welcome!, ${ctx.params.name}`;
+			},
+		},
 	},
 
 	/**

@@ -1,10 +1,13 @@
 ---
 to: <%=h.changeCase.snakeCase(name)%>/Makefile
 ---
+<% if(locals.shouldAddDb){ -%>
 # https://www.postgresql.org/docs/current/libpq-envars.html
 export PGPASSWORD=$(POSTGRES_PASSWORD)
 export PSQL_DRIVER ?= psql -h $(POSTGRES_HOST) -p $(POSTGRES_PORT) -U $(POSTGRES_USER) $(POSTGRES_DB)
+<% } -%>
 
+<% if(locals.shouldAddDb){ -%>
 DB_NAME ?= -
 
 ifneq ($(DB_NAME),-)
@@ -16,10 +19,17 @@ setup-database:
 	@echo Skipping database creation no DB_NAME env var found
 	@echo ---------------
 endif
+<% } -%>
 
+<% if(locals.shouldAddDb){ -%>
 start-service: setup-database
 	npm run dev
+<% } else { -%>
+start-service:
+	npm run dev
+<% } -%>
 
+<% if(locals.shouldAddDb){ -%>
 create-db-migration:
 	npm run sequelize migration:generate -- --name=${name}
 
@@ -46,3 +56,4 @@ db-seed-undo-specific:
 
 db-seed-all:
 	npm run sequelize db:seed:undo:all
+<% } -%>

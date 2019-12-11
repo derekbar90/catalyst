@@ -146,9 +146,13 @@ module.exports = {
           responsePayload = { ...responsePayload, ...mergeObject };
         }
       }
-
-      responsePayload = { ...responsePayload, ...answer };
+      
+      responsePayload = { ...responsePayload, ...answer, nodeDebugPort };
     }
+
+    const nodeDebugPort = Math.floor(Math.random() * (Math.floor(9999) - Math.ceil(9033) + 1)) + 9033;
+    
+    responsePayload = {...responsePayload, nodeDebugPort};
 
     return responsePayload;
   },

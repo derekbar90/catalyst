@@ -4,7 +4,7 @@ to: <%=h.changeCase.snakeCase(name)%>/moleculer.config.ts
 
 "use strict";
 import { BrokerOptions, Errors } from "moleculer";
-
+import { PermissionsMiddleware } from "./middleware/perm-middleware";
 /**
  * Moleculer ServiceBroker configuration file
  *
@@ -125,12 +125,39 @@ const brokerConfig: BrokerOptions = {
 
 	// Enable metrics function. More info: https://moleculer.services/docs/0.13/metrics.html
 	metrics: {
-		enabled: false,
-		reporter: [
-			{
-				type: "Console",
-			},
-		],
+	enabled: Boolean(process.env.METRICS_ENABLED) == true,
+	reporter: [
+		{
+		type: "Prometheus"
+		}
+	]
+	},
+
+	//  Tracing support setup as of moleculer 0.14
+	tracing: {
+		enabled: Boolean(process.env.TRACING_ENABLED) == true,
+		exporter: {
+			type: "Jaeger",
+			options: {
+				// HTTP Reporter endpoint. If set, HTTP Reporter will be used.
+				endpoint: null,
+				// UDP Sender host option.
+				host: "jaeger",
+				// UDP Sender port option.
+				port: 6832,
+				// Jaeger Sampler configuration.
+				sampler: {
+					// Sampler type. More info: https://www.jaegertracing.io/docs/1.14/sampling/#client-sampling-configuration
+					type: "Const",
+					// Sampler specific options.
+					options: {}
+				},
+				// Additional options for `Jaeger.Tracer`
+				tracerOptions: {},
+				// Default tags. They will be added into all span tags.
+				defaultTags: null
+			}
+		}
 	},
 
 	// Register internal services ("$node"). More info: https://moleculer.services/docs/0.13/services.html#Internal-services
@@ -142,7 +169,12 @@ const brokerConfig: BrokerOptions = {
 	hotReload: false,
 
 	// Register custom middlewares
-	middlewares: [],
+	middlewares: [
+		PermissionsMiddleware({
+			prefix: process.env.ROOT_ORG_IDENTIFIER,
+			ketoEndpoint: process.env.KETO_ADMIN_URL
+		})
+	],
 
 	// Called after broker created.
 	created(broker) {
