@@ -6,6 +6,7 @@
 /* Custom Component Imports */
 @import "./components/buttons.css";
 @import "./components/layout.css";
+@import "./components/inputs.css";
 
 @import "tailwindcss/utilities";
 @import "./custom-utilities.css";

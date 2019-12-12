@@ -1,0 +1,35 @@
+input[type="text"], 
+input[type="email"],
+input[type="password"]  {
+    @apply shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight
+}
+
+input[type="text"]:focus, 
+input[type="email"]:focus,
+input[type="password"]:focus  {
+    @apply outline-none shadow-outline;
+}
+
+input[type="email"]:invalid:not(:focus):not(:placeholder-shown),
+input[type="password"]:invalid:not(:focus):not(:placeholder-shown),
+input[type="text"]:invalid:not(:focus):not(:placeholder-shown) {
+    @apply border-red-500 border-2
+}
+
+input[type="email"]:valid:not(:focus):not(:placeholder-shown),
+input[type="password"]:valid:not(:focus):not(:placeholder-shown),
+input[type="text"]:valid:not(:focus):not(:placeholder-shown) {
+    @apply border-green-500 border-2
+}
+
+input[type="password"] + .requirements {
+    @apply opacity-0 hidden
+}
+
+input[type="password"]:invalid:not(:focus):not(:placeholder-shown) + .requirements {
+    @apply opacity-100 flex
+}
+
+.requirements {
+    @apply text-red-500 text-xs mx-1 mt-2
+}

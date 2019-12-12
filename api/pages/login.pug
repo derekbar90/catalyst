@@ -17,10 +17,24 @@ block content
             input(type="hidden",name="challenge",value=challenge)
             div(class="mb-4")
                 label(class="block text-gray-700 text-sm font-bold mb-2", for="username") Username
-                input(type="email",id="email",name="email",placeholder="Username",class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline")
+                input(
+                    type="email",
+                    id="email",
+                    name="email",
+                    placeholder="Username",
+                    class="focus:placeholder-transparent",
+                    required
+                )
             div(class="mb-4")
                 label(class="block text-gray-700 text-sm font-bold mb-2", for="password") Password
-                input(type="password",id="password",name="password",placeholder="password",class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline")
+                input(
+                    type="password",
+                    id="password",
+                    name="password",
+                    placeholder="password",
+                    class="focus:placeholder-transparent",
+                    required
+                )
             div(class="mb-4 flex content-center items-center")
                 input(type="checkbox",id="remember",name="remember",value="1",class="shadow mr-2 leading-tight")
                 label(for="remember",class=" block text-gray-500 font-bold") Remember me
