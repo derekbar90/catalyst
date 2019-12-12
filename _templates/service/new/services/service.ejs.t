@@ -4,9 +4,12 @@ to: <%=h.changeCase.snakeCase(name)%>/services/<%=h.changeCase.snakeCase(name)%>
 
 "use strict";
 import {Context, ServiceSchema} from "moleculer";
+
+<% if(locals.shouldAddDb){ -%>
 // @ts-ignore
 import DbService from "moleculer-db";
 import { <%=h.changeCase.pascalCase(name)%>SequelizeModel, I<%=h.changeCase.pascalCase(name)%>Model } from "../models/<%=h.changeCase.snakeCase(name)%>";
+<% } -%>
 
 const <%=h.changeCase.pascalCase(name)%>Service: ServiceSchema = {
 	name: "<%=h.changeCase.snakeCase(name)%>",
