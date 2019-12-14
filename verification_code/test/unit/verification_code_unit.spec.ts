@@ -47,13 +47,13 @@ describe("Test 'verification_code' service", () => {
   const type = "USER_ACCOUNT";
   const code = "4cd2dfdc-e4d7-4924-af89-3020b97e27e0";
 
-  beforeAll(() => broker.start());
-  afterAll(() => broker.stop());
+  beforeAll(async () =>  await broker.start());
+  afterAll(async () => await broker.stop());
 
-  beforeEach(() => {
-    Sequelize.mockClear();
-    db.authenticate.mockClear();
-    db.define.mockClear();
+  beforeEach(async () => {
+    await Sequelize.mockClear();
+    await db.authenticate.mockClear();
+    await db.define.mockClear();
   });
 
   describe("Test 'verification_code.getCode' action", () => {
@@ -63,7 +63,7 @@ describe("Test 'verification_code' service", () => {
 
       const params = { userId, type };
 
-      expect(broker.call("verification_code.getCode", params)).resolves.toBe(
+      await expect(broker.call("verification_code.getCode", params)).resolves.toBe(
         code
       );
     });
@@ -85,9 +85,7 @@ describe("Test 'verification_code' service", () => {
       );
       const params = { userId, type, code };
 
-      const isValid = await broker.call("verification_code.verifyCode", params);
-
-      expect(isValid).toBe(true);
+      await expect(broker.call("verification_code.verifyCode", params)).resolves.toBe(true);
     });
 
     it("should fail verification for bad code", async () => {
@@ -106,9 +104,7 @@ describe("Test 'verification_code' service", () => {
         code: "21428536-66ae-42e0-98e6-780473a5bc65"
       };
 
-      const isValid = await broker.call("verification_code.verifyCode", params);
-
-      expect(isValid).toBe(false);
+      await expect(broker.call("verification_code.verifyCode", params)).resolves.toBe(false);
 	});
 	
 	it("should fail when code hash is not found", async () => {
@@ -121,13 +117,7 @@ describe("Test 'verification_code' service", () => {
 		  type,
 		  code: "21428536-66ae-42e0-98e6-780473a5bc65"
 		};
-		try { 
-			await broker.call("verification_code.verifyCode", params);
-		} catch (e) {
-			expect(e.message).toBe('Verification code not found for user and type')
-		}
-		
-		
+    await expect(broker.call("verification_code.verifyCode", params)).rejects.toThrow('Verification code not found for user and type')
 	  });
   });
 });

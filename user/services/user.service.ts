@@ -108,6 +108,18 @@ const UserService: ServiceSchema = {
         lastName: { type: "string", min: 2 },
         avatar: { type: "string", optional: true }
       },
+      tracing: {
+        tags: {
+          params: [
+            'username',
+            'email',
+            'firstName',
+            'lastName',
+            'avatar'
+          ],
+          meta: true,
+        }
+      },
       graphql: {
         mutation: `register(
 						username: String!,
@@ -225,6 +237,15 @@ const UserService: ServiceSchema = {
         id: { type: "uuid" },
         code: { type: "uuid" },
         password: { type: "string", min: 7 }
+      },
+      tracing: {
+        tags: {
+          params: [
+            'id',
+            'code'
+          ],
+          meta: true,
+        }
       },
       graphql: {
         mutation: `changePassword(

@@ -18,6 +18,7 @@ const VerificationCodeService: ServiceSchema = {
    * Service settings
    */
   settings: {
+    idField: 'id',
     fields: [
       "id",
       "userId",
@@ -92,6 +93,7 @@ const VerificationCodeService: ServiceSchema = {
           ctx.params.userId,
           ctx.params.type
         );
+        
         if (codeHashLookup == null) {
           throw new Errors.MoleculerClientError(
             "Verification code not found for user and type",
@@ -146,12 +148,13 @@ const VerificationCodeService: ServiceSchema = {
       type: string
     ): Promise<IVerificationCodeModel> {
       const emailLookup = await this.adapter.find({
-        limit: 1,
+        limit: 2,
         query: {
           userId,
           type,
           verified: false
-        }
+        },
+        sort: ['-createdAt']
       });
       return emailLookup[0];
     }

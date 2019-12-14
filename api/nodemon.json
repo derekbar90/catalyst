@@ -4,7 +4,8 @@
     ".git",
     "node_modules/**/node_modules",
     "package.json",
-    "./**/*.spec.ts"
+    "./**/*.spec.ts",
+    "public/static/css/main.css"
   ],
   "verbose": false,
   "watch": ["./"],
