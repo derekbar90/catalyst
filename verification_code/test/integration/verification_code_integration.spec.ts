@@ -134,7 +134,6 @@ describe("Test 'verification_code' service", () => {
     });
 
     test("should pass verification for code", async () => {
-      console.log(await broker.call("verification_code.find"))
       const params = {
         userId,
         type,
