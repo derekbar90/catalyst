@@ -68,6 +68,8 @@ const VerificationCodeService: ServiceSchema = {
         entity.type = ctx.params.type;
         entity.code = await bcrypt.hash(verificationCode, 10);
         entity.verified = false;
+        entity.createdAt = new Date();
+        entity.updatedAt = new Date();
 
         // Create new verification code
         await this.adapter.insert(entity);
@@ -107,10 +109,11 @@ const VerificationCodeService: ServiceSchema = {
           codeHashLookup.code
         );
 
-        // Create new verification code
+        // Update verification code as verified
         await this.adapter.updateById(codeHashLookup.id, {
           $set: {
-            verified: isValid
+            verified: isValid,
+            updatedAt: new Date()
           }
         });
 
@@ -154,7 +157,7 @@ const VerificationCodeService: ServiceSchema = {
           type,
           verified: false
         },
-        sort: ['-createdAt']
+        sort: ['createdAt']
       });
       return emailLookup[0];
     }

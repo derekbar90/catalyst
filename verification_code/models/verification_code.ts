@@ -44,8 +44,8 @@ export interface IVerificationCodeModel extends Model {
   verified: boolean;
   type: any;
   
-  readonly createdAt: Date;
-  readonly updatedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 type VerificationCodeModelStatic = typeof Model & {
