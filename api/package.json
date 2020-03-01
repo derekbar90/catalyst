@@ -44,6 +44,7 @@
   "dependencies": {
     "graphql": "^14.5.8",
     "ioredis": "^4.2.0",
+    "jaeger-client": "^3.17.1",
     "moleculer": "next",
     "moleculer-apollo-server": "^0.1.3",
     "moleculer-db": "^0.8.2",

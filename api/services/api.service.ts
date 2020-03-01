@@ -321,7 +321,8 @@ const ApiService: ServiceSchema = {
                   },
                   {
                     meta: {
-                      user: {}
+                      user: {},
+                      roles: null
                     }
                   }
                 );

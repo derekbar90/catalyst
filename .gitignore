@@ -79,3 +79,4 @@ api/public/*
 **/*.js.map
 **/*.js
 hydra.js*
+traefik/acme.json
