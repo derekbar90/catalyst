@@ -9,8 +9,8 @@ Project Catalyst is a microservices framework which allows you to create and dep
  - [x] User Management
 	 - [x] User Registration
 	 - [x] User Login
-	 - [ ] Account Verify
-	 - [ ] Password Reset
+	 - [x] Account Verify
+	 - [x] Password Reset
 	 - [ ] Forgot Username
 	 - [x] Global User Registration Event
  - [x] Database Setup
@@ -39,8 +39,8 @@ Project Catalyst is a microservices framework which allows you to create and dep
    - [x] implicit flow
    - [x] consent flow
    - [x] auth code flow
- - [ ] ORY Keto
- - [ ] Email Suport
+ - [x] ORY Keto
+ - [x] Email Suport
    - [x] Service setup w/ mailgun provider 
    - [x] Templating
    - [x] User registration event consumption for welcome email
