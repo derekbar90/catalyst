@@ -78,6 +78,52 @@ services:
       - postgresd
 
   # service container
+  client:
+    build:
+      context: ./client
+    container_name: client
+    image: catalyst_client
+    env_file: docker-compose.env
+    networks:
+      - catalyst-backend
+      - catalyst-frontend
+    volumes:
+      - ./client:/app:delegated #delegates speeds up mac os volumes
+      - client_vol:/app/node_modules
+    command:
+      - ./wait-for-it.sh
+      - postgresd:5432
+      - --
+      - make
+      - start-service
+    environment:
+      - ADMIN_OAUTH2_CLIENT_ID=${ADMIN_OAUTH2_CLIENT_ID}
+      - ADMIN_OAUTH2_CLIENT_SECRET=${ADMIN_OAUTH2_CLIENT_SECRET}
+      - HOST_NAME=${HOST_NAME}
+      - SUB_PATH=admin
+    ports:
+      - 9089:80
+      - 19000:19000
+      - 19001:19001
+      - 19002:19002
+    links:
+      - nats
+      - redis
+      - hydra
+      - jaeger
+    depends_on:
+      - nats
+      - redis
+      - postgresd
+      - traefik
+      - api
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=client"
+      - "traefik.port=8080"
+      - "traefik.frontend.rule=Host:${HOST_NAME};PathPrefix:/"
+
+  # service container
   admin:
     build:
       context: ./admin
@@ -231,7 +277,7 @@ services:
   postgresd:
     image: postgres:9.6
     container_name: postgresd
-    env_file: docker-compose.env
+    env_file: .env
     restart: always
     networks:
       - catalyst-backend
@@ -265,7 +311,7 @@ services:
   # this usually will only migrate once
   # unless you delete ./postgres/data
   hydra-migrate:
-    image: oryd/hydra:v1.0.8-alpine
+    image: oryd/hydra:v1.3.2-alpine
     networks:
       - catalyst-backend
     environment:
@@ -279,7 +325,7 @@ services:
   # the main hydra container providing
   # http(s)://hydra:4444(4445)
   hydra:
-    image: oryd/hydra:v1.0.8-alpine
+    image: oryd/hydra:v1.3.2-alpine
     container_name: hydra
     build:
       context: ./hydra
@@ -327,7 +373,7 @@ services:
       - "traefik.hydra.frontend.rule=Host:${HOST_NAME};PathPrefixStrip:/oauth/"
 
   keto-migrate:
-    image: oryd/keto:v0.3.6
+    image: oryd/keto:v0.4
     networks:
       - catalyst-backend
     links:
@@ -338,7 +384,7 @@ services:
     restart: on-failure
 
   keto:
-    image: oryd/keto:v0.3.6
+    image: oryd/keto:v0.4
     container_name: keto
     networks:
       - catalyst-backend
@@ -528,6 +574,8 @@ services:
 
 volumes:
   verification_code_vol:
+    driver: local
+  client_vol:
     driver: local
   email_vol:
     driver: local

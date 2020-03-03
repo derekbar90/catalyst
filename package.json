@@ -18,7 +18,7 @@
   "author": "Derek Barrera",
   "license": "ISC",
   "devDependencies": {
-      "hygen": "^5.0.1"
+    "hygen": "^5.0.1"
   },
   "bugs": {
     "url": "https://github.com/derekbar90/catalyst/issues"

@@ -8,6 +8,12 @@ import { UserSequelizeModel, IUserModel } from "../models/user";
 import * as crypto from "crypto";
 import * as bcrypt from "bcrypt";
 
+var nodeFetch = require("node-fetch");
+var querystring = require("querystring");
+
+var ketoUrl = process.env.KETO_ADMIN_URL;
+var mockTlsTermination = {};
+
 const UserService: ServiceSchema = {
   name: "user",
 
@@ -205,8 +211,21 @@ const UserService: ServiceSchema = {
 
         entity.username = ctx.params.username;
 
+        const hasUsers = await this.hasUsers();
+
         // Create new user
         const user = await this.adapter.insert(entity);
+
+        const systemRoles = await this.getRoles(user.id)
+
+        const role = await this.parseRole(systemRoles, 'user');
+        
+        await this.setRole(role.id, user.id);
+
+        if (!hasUsers) {
+          const adminRole = await this.parseRole(systemRoles, 'admin');
+          await this.setRole(adminRole.id, user.id);
+        }
 
         this.broker.broadcast("user.registered", { ...entity }, "mail");
 
@@ -333,6 +352,30 @@ const UserService: ServiceSchema = {
      * @param {Context} ctx
      * @param {String} email
      */
+    async hasUsers(ctx: Context, email: string) {
+      const userLookup = await this.adapter.find({
+        limit: 2
+      });
+      return userLookup.length !== 0;
+    },
+    
+    /**
+     * Parse Role from Keto
+     *
+     * @param {Context} ctx
+     * @param {String} email
+     */
+    async parseRole(systemRoles: {id: string, members: string[]}[], role: string) {
+      const userRole = systemRoles.find((sysRole: any) => sysRole.id.indexOf(`:${role}`) > -1)
+      return userRole;
+    },
+
+    /**
+     * Get user by email
+     *
+     * @param {Context} ctx
+     * @param {String} email
+     */
     async getUserByEmail(ctx: Context, email: string) {
       const emailLookup = await this.adapter.find({
         limit: 1,
@@ -341,6 +384,58 @@ const UserService: ServiceSchema = {
       return emailLookup[0];
     },
 
+    /**
+     * Get user 
+     *
+     * @param {Context} ctx
+     * @param {String} username
+     */
+    async getRoles(ctx: Context) {
+      const url = new URL("/engines/acp/ory/exact/roles", ketoUrl);
+      return nodeFetch(url.toString(), {
+        method: "GET",
+        headers: {
+          ...mockTlsTermination
+        }
+      }).then(function(res: any) {
+        if (res.status < 200 || res.status > 302) {
+          // This will handle any errors that aren't network related (network related errors are handled automatically)
+          return res.json().then(function(body: any) {
+            console.error("An error occurred while making a HTTP request: ", body);
+            return Promise.reject(new Error(body.error.message));
+          });
+        }
+
+        return res.json();
+      });
+    },
+
+    /**
+     * Set role
+     *
+     * @param {number} roleId
+     * @param {String} userId
+     */
+    async setRole(roleId: number, userId: String) {
+      const url = new URL(`/engines/acp/ory/exact/roles/${roleId}/members`, ketoUrl);
+      return nodeFetch(url.toString(), {
+        method: "PUT",
+        body: JSON.stringify({members: [userId]}),
+        headers: {
+          ...mockTlsTermination
+        }
+      }).then(function(res: any) {
+        if (res.status < 200 || res.status > 302) {
+          // This will handle any errors that aren't network related (network related errors are handled automatically)
+          return res.json().then(function(body: any) {
+            console.error("An error occurred while making a HTTP request: ", body);
+            return Promise.reject(new Error(body.error.message));
+          });
+        }
+
+        return res.json();
+      });
+    },
     /**
      * Get user by username
      *
