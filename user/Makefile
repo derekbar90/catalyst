@@ -15,6 +15,7 @@ setup-database:
 endif
 
 start-service: setup-database
+	npm run build
 	npm run dev
 
 create-db-migration:

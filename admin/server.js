@@ -33,10 +33,6 @@ const port = parseInt(process.env.PORT, 10) || 3000;
 const publicEnvFilename = 'public.env';
 const subPath = `/${process.env.SUB_PATH}` || '';
 
-console.log(subPath);
-console.log(subPath);
-console.log(subPath);
-
 const app = next({ dev: isDev });
 const handle = app.getRequestHandler();
 

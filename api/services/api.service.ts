@@ -6,6 +6,10 @@ import { hydra } from "../hydra";
 var pug = require("pug");
 var querystring = require("querystring");
 
+var nodeFetch = require("node-fetch");
+var ketoUrl = process.env.KETO_ADMIN_URL;
+var mockTlsTermination = {};
+
 const ApiService: ServiceSchema = {
   name: "api",
 
@@ -175,15 +179,44 @@ const ApiService: ServiceSchema = {
                       // and optional. In the context of OpenID Connect, a value of 0 indicates the lowest authorization level.
                       // acr: '0',
                     })
-                    .then(function(response: { redirect_to: string }) {
-                      // All we need to do now is to redirect the user back to hydra!
+                    .then(async function(response: { redirect_to: string }) {
+                      // We need to check if this route is the admin panel
+                      const isAdminProtectedCallback = response.redirect_to.indexOf('%2Fadmin%2F') > -1;
+                      
+                      let hasAccess = true;
 
-                      console.log(response.redirect_to);
+                      if(isAdminProtectedCallback) {
+                        const getUser = await req.$ctx.call("user.find", {
+                          limit: 1,
+                          query: { email: parsedBody.email}
+                        });
 
+                        try{
+                          const url = new URL("/engines/acp/ory/exact/roles", ketoUrl);
+                          const ketoPermissions = await nodeFetch(url.toString(), {
+                            method: "GET",
+                            headers: {
+                              ...mockTlsTermination
+                            }
+                          })
+                          
+                          if (ketoPermissions.status < 200 || ketoPermissions.status > 302) {
+                            // This will handle any errors that aren't network related (network related errors are handled automatically)
+                            const body = await ketoPermissions.json()
+                            console.error("An error occurred while making a HTTP request: ", body);
+                            throw Promise.reject(new Error(body.error.message));
+                          }
+                          const roles = await ketoPermissions.json();
+                          hasAccess = roles.some((role: any) => role.id.indexOf(':admin') > -1 && role.members.some((userId: string) => userId === getUser[0].id));
+                        } catch (e){
+                          console.log(e);
+                          throw e;
+                        }
+                      }
                       res.writeHead(302, {
-                        Location: response.redirect_to
+                        Location: hasAccess ? response.redirect_to : `https://${process.env.HOST_NAME}`
                       });
-                      res.end();
+                      res.end();                     
                     })
                     // This will handle any error that happens when making HTTP calls to hydra
                     .catch(function(error: Error) {

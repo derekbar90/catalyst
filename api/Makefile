@@ -8,6 +8,5 @@ stop-stack:
 	docker-compose stop
 
 start-service:
-	npm i --save jaeger-client
-	npm i
+	npm run build
 	npm run dev

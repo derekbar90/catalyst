@@ -21,10 +21,10 @@ const withData = graphql(allPostsGql, {
           if (!fetchMoreResult) {
             return previousResult;
           }
-          return Object.assign({}, previousResult, {
-            // Append the new posts results to the old one
+          return {
+            ...previousResult, // Append the new posts results to the old one
             allPosts: [...previousResult.allPosts, ...fetchMoreResult.allPosts]
-          });
+          };
         }
       })
   })
