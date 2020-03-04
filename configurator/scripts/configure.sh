@@ -16,6 +16,9 @@ fi
 if [ -d "/config/keto/policies/" ]; then
     envsubstfiles "/config/keto/policies/*.json"
 fi
+if [ -d "/config/keto/roles/" ]; then
+    envsubstfiles "/config/keto/roles/*.json"
+fi
 if [ -d "/config/oathkeeper/rules/" ]; then
     envsubstfiles "/config/oathkeeper/rules/*.json"
 fi

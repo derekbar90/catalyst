@@ -10,10 +10,10 @@ export const withMutation = graphql(createPostGql, {
           updateQueries: {
             allPosts: (previousResult, { mutationResult }) => {
               const newPost = mutationResult.data.createPost;
-              return Object.assign({}, previousResult, {
-                // Append the new post
+              return {
+                ...previousResult, // Append the new post
                 allPosts: [newPost, ...previousResult.allPosts]
-              });
+              };
             }
           }
         })
