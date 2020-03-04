@@ -62,7 +62,7 @@ Project Catalyst is a microservices framework which allows you to create and dep
 	- ```git submodule update --init --recursive```
 	- `Note`: If you don't want to use the catalyst client then you can remove the service section from the docker-compose along with it's volume definition. 
 - Run `npm i` first to setup any global dev tools which are used. These are defined in the `package.json` which is at the root of the project.
-
+- Setup acme config with your email at /traefik/traefik.toml
   
 
 ## Ports Configs

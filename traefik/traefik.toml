@@ -21,7 +21,7 @@ watch = true
 exposedByDefault = false
 
 [acme]
-email = "derekbarrera@gmail.com"
+email = "YOUR_EMAIL@gmail.com"
 storage = "acme.json"
 entryPoint = "https"
 onHostRule = true
