@@ -22,5 +22,5 @@ introspect-token:
 	/usr/bin/hydra token introspect ${token} --endpoint ${HYDRA_URL_ADMIN} --client-id ${client_id}
 
 add-admin-client:
-	#Example: /usr/bin/hydra clients create --endpoint http://127.0.0.1:4445/ --id ${ADMIN_OAUTH2_CLIENT_ID} --secret ${ADMIN_OAUTH2_CLIENT_SECRET} --callbacks https://funk.derekbarrera.com/admin/callback --response-types token,code --grant-types authorization_code,refresh_token --scope openid,offline --token-endpoint-auth-method client_secret_post
+	#Example: /usr/bin/hydra clients create --endpoint http://127.0.0.1:4445/ --id ${ADMIN_OAUTH2_CLIENT_ID} --secret ${ADMIN_OAUTH2_CLIENT_SECRET} --callbacks https://${HOST_NAME}/admin/callback --response-types token,code --grant-types authorization_code,refresh_token --scope openid,offline --token-endpoint-auth-method client_secret_post
 	/usr/bin/hydra clients create --endpoint ${HYDRA_URL_ADMIN} --client-id ${client_id} --callbacks ${callback} --response-types token,code --grant-types authorization_code,refresh_token --scope openid,offline --token-endpoint-auth-method client_secret_post
