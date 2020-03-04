@@ -189,6 +189,7 @@ services:
       LOGLEVEL: trace
       HOST_NAME: ${HOST_NAME}
       HYDRA_ADMIN_URL: http://hydra:4445
+      KETO_ADMIN_URL: http://keto:4466
       NODE_INSPECT_PORT: 9030
     ports:
       - "9030:9030"

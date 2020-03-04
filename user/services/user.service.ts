@@ -50,6 +50,14 @@ const UserService: ServiceSchema = {
 							email: String!
 							createdAt: Date
 					}
+					"""
+					This type describes a find by enum.
+					"""
+					input FindUserQuery {
+							id: String,
+							username: String,
+							email: String,
+					}
 				`,
       resolvers: {
         User: {}
@@ -234,20 +242,29 @@ const UserService: ServiceSchema = {
     },
 
     find: {
-      permissions: [
-        {
-          subject: "user",
-          action: "read",
-          flavor: "exact"
-        }
-      ],
+      // permissions: [
+      //   {
+      //     subject: "user",
+      //     action: "read",
+      //     flavor: "exact"
+      //   }
+      // ],
       params: {
         limit: { type: "number" },
         offset: { type: "number", optional: true },
-        sort: { type: "string", optional: true }
+        sort: { type: "string", optional: true },
+        query: { 
+          type: "object", 
+          optional: true,
+          props: {
+            id: { type: "string", optional: true },
+            username: { type: "string", optional: true },
+            email: { type: "string", optional: true }
+          } 
+        }
       },
       graphql: {
-        query: "users(limit: Int!, offset: Int, sort: String): [User]"
+        query: "users(limit: Int!, offset: Int, sort: String, query: FindUserQuery): [User]"
       }
     },
 
