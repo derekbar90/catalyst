@@ -13,6 +13,7 @@ stop-stack:
 	docker-compose stop
 
 build-stack:
+	git submodule update --init --recursive
 	docker-compose build
 
 dbash:
