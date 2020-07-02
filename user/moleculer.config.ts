@@ -58,7 +58,7 @@ const brokerConfig: BrokerOptions = {
   // Define a serializer.
   // Available values: "JSON", "Avro", "ProtoBuf", "MsgPack", "Notepack", "Thrift".
   // More info: https://moleculer.services/docs/0.13/networking.html
-  serializer: "JSON",
+  serializer: "ProtoBuf",
 
   // Number of milliseconds to wait before reject a request with a RequestTimeout error. Disabled: 0
   requestTimeout: 10 * 1000,
