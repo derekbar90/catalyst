@@ -3,14 +3,16 @@ to: "<%= locals.shouldAddDb ? h.changeCase.snakeCase(name) + '/migrations/201910
 ---
 'use strict';
 
-const { <%=h.changeCase.pascalCase(name)%>SequelizeModel } = require('../models/<%=h.changeCase.pascalCase(name)%>');
+const { <%=h.changeCase.pascalCase(name)%>SequelizeModel } = require('../models/<%=h.changeCase.snakeCase(name)%>');
 import { QueryInterface, Sequelize } from 'sequelize';
 
 module.exports = {
   up: (queryInterface: QueryInterface, Sequelize: Sequelize) => {
-    return queryInterface.createTable(<%=h.changeCase.pascalCase(name)%>SequelizeModel.name, <%=h.changeCase.pascalCase(name)%>SequelizeModel.define);
+    const dbName = <%=h.changeCase.pascalCase(name)%>SequelizeModel.name.split('').pop() == 's' ? <%=h.changeCase.pascalCase(name)%>SequelizeModel.name : `${<%=h.changeCase.pascalCase(name)%>SequelizeModel.name}s`
+    return queryInterface.createTable(dbName, <%=h.changeCase.pascalCase(name)%>SequelizeModel.define);
   },
   down: (queryInterface: QueryInterface, Sequelize: Sequelize) => {
+    const dbName = <%=h.changeCase.pascalCase(name)%>SequelizeModel.name.split('').pop() == 's' ? <%=h.changeCase.pascalCase(name)%>SequelizeModel.name : `${<%=h.changeCase.pascalCase(name)%>SequelizeModel.name}s`
     return queryInterface.dropTable(<%=h.changeCase.pascalCase(name)%>SequelizeModel.name);
   }
 };

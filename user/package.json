@@ -42,7 +42,7 @@
     "bcrypt": "^3.0.6",
     "ioredis": "^4.16.0",
     "jaeger-client": "^3.17.2",
-    "moleculer": "0.14.0",
+    "moleculer": "0.14.6",
     "moleculer-db": "^0.8.5",
     "moleculer-db-adapter-sequelize": "^0.2.5",
     "nats": "^1.4.2",

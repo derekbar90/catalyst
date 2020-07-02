@@ -1,14 +1,16 @@
 ---
 to: <%=h.changeCase.snakeCase(name)%>/moleculer.config.ts
 ---
-
 "use strict";
 import { BrokerOptions, Errors } from "moleculer";
-import { PermissionsMiddleware } from "./middleware/perm-middleware";
+import {
+  KetoMiddeware,
+  ManageKetoPermissionsMiddleware,
+} from "@thesatoshicompany/moleculer-keto";
 /**
  * Moleculer ServiceBroker configuration file
  *
- * More info about options: https://moleculer.services/docs/0.13/broker.html#Broker-options
+ * More info about options: https://moleculer.services/docs/0.14/broker.html#Broker-options
  *
  * Overwrite options in production:
  * ================================
@@ -20,179 +22,186 @@ import { PermissionsMiddleware } from "./middleware/perm-middleware";
  * 	via environment variables, use the `MOL_` prefix and double underscore `__` for nested properties in .env file.
  * 	For example, to set the cacher prefix to `MYCACHE`, you should declare an env var as `MOL_CACHER__OPTIONS__PREFIX=MYCACHE`.
  */
+
 const brokerConfig: BrokerOptions = {
-	// Namespace of nodes to segment your nodes on the same network.
-	namespace: "",
-	// Unique node identifier. Must be unique in a namespace.
-	nodeID: null,
+  // Namespace of nodes to segment your nodes on the same network.
+  namespace: process.env.SERVICE_NAMESPACE || "",
+  // Unique node identifier. Must be unique in a namespace.
+  // nodeID: null,
 
-	// Enable/disable logging or use custom logger. More info: https://moleculer.services/docs/0.13/logging.html
-	logger: true,
-	// Log level for built-in console logger. Available values: trace, debug, info, warn, error, fatal
-	logLevel: "info",
-	// Log formatter for built-in console logger. Available values: default, simple, short. It can be also a `Function`.
-	logFormatter: "default",
-	// Custom object & array printer for built-in console logger.
-	logObjectPrinter: null,
+  // Enable/disable logging or use custom logger. More info: https://moleculer.services/docs/0.14/logging.html
+  logger: true,
+  // Log level for built-in console logger. Available values: trace, debug, info, warn, error, fatal
+  logLevel: "info",
+  // Log formatter for built-in console logger. Available values: default, simple, short. It can be also a `Function`.
+  logFormatter: "default",
+  // Custom object & array printer for built-in console logger.
+  // logObjectPrinter: null,
 
-	// Define transporter.
-	// More info: https://moleculer.services/docs/0.13/networking.html
-	transporter: "NATS",
+  // Define transporter.
+  // More info: https://moleculer.services/docs/0.14/networking.html
+  transporter: "NATS",
 
-	// Define a cacher. More info: https://moleculer.services/docs/0.13/caching.html
-	cacher: "Redis",
+  // Define a cacher. More info: https://moleculer.services/docs/0.14/caching.html
+  cacher: {
+    type: "Redis",
+    options: {
+      // Prefix for keys
+      prefix: "MOL",
+      // set Time-to-live to 30sec.
+      ttl: 30,
+      // Turns Redis client monitoring on.
+      monitor: false,
+      // Redis settings
+      redis: {
+        host: process.env.REDIS_HOST || "redis",
+        port: process.env.REDIS_PORT || 6379,
+        password: process.env.REDIS_PASSWORD || "CHANGE_THIS_VALUE",
+        db: 0,
+      },
+    },
+  },
 
-	// Define a serializer.
-	// Available values: "JSON", "Avro", "ProtoBuf", "MsgPack", "Notepack", "Thrift".
-	// More info: https://moleculer.services/docs/0.13/networking.html
-	serializer: "JSON",
+  // Define a serializer.
+  // Available values: "JSON", "Avro", "ProtoBuf", "MsgPack", "Notepack", "Thrift".
+  // More info: https://moleculer.services/docs/0.14/networking.html
+  serializer: "ProtoBuf",
 
-	// Number of milliseconds to wait before reject a request with a RequestTimeout error. Disabled: 0
-	requestTimeout: 10 * 1000,
+  // Number of milliseconds to wait before reject a request with a RequestTimeout error. Disabled: 0
+  requestTimeout: 10 * 1000,
 
-	// Retry policy settings. More info: https://moleculer.services/docs/0.13/fault-tolerance.html#Retry
-	retryPolicy: {
-		// Enable feature
-		enabled: false,
-		// Count of retries
-		retries: 5,
-		// First delay in milliseconds.
-		delay: 100,
-		// Maximum delay in milliseconds.
-		maxDelay: 1000,
-		// Backoff factor for delay. 2 means exponential backoff.
-		factor: 2,
-		// A function to check failed requests.
-		check: (err: Errors.MoleculerRetryableError) => err && !!err.retryable,
-	},
+  // Retry policy settings. More info: https://moleculer.services/docs/0.14/fault-tolerance.html#Retry
+  retryPolicy: {
+    // Enable feature
+    enabled: false,
+    // Count of retries
+    retries: 5,
+    // First delay in milliseconds.
+    delay: 100,
+    // Maximum delay in milliseconds.
+    maxDelay: 1000,
+    // Backoff factor for delay. 2 means exponential backoff.
+    factor: 2,
+    // A function to check failed requests.
+    //@ts-ignore
+    check: (err: Errors.MoleculerRetryableError): boolean =>
+      err && !!err.retryable,
+  },
 
-	// Limit of calling level. If it reaches the limit, broker will throw an MaxCallLevelError error. (Infinite loop protection)
-	maxCallLevel: 100,
+  // Limit of calling level. If it reaches the limit, broker will throw an MaxCallLevelError error. (Infinite loop protection)
+  maxCallLevel: 100,
 
-	// Number of seconds to send heartbeat packet to other nodes.
-	heartbeatInterval: 5,
-	// Number of seconds to wait before setting node to unavailable status.
-	heartbeatTimeout: 15,
+  // Number of seconds to send heartbeat packet to other nodes.
+  heartbeatInterval: 5,
+  // Number of seconds to wait before setting node to unavailable status.
+  heartbeatTimeout: 15,
 
-	// Tracking requests and waiting for running requests before shutdowning. More info: https://moleculer.services/docs/0.13/fault-tolerance.html
-	tracking: {
-		// Enable feature
-		enabled: false,
-		// Number of milliseconds to wait before shutdowning the process
-		shutdownTimeout: 5000,
-	},
+  // Tracking requests and waiting for running requests before shutdowning. More info: https://moleculer.services/docs/0.14/fault-tolerance.html
+  tracking: {
+    // Enable feature
+    enabled: false,
+    // Number of milliseconds to wait before shutdowning the process
+    shutdownTimeout: 5000,
+  },
 
-	// Disable built-in request & emit balancer. (Transporter must support it, as well.)
-	disableBalancer: false,
+  // Disable built-in request & emit balancer. (Transporter must support it, as well.)
+  disableBalancer: false,
 
-	// Settings of Service Registry. More info: https://moleculer.services/docs/0.13/registry.html
-	registry: {
-		// Define balancing strategy.
-		// Available values: "RoundRobin", "Random", "CpuUsage", "Latency"
-		strategy: "RoundRobin",
-		// Enable local action call preferring.
-		preferLocal: true,
-	},
+  // Settings of Service Registry. More info: https://moleculer.services/docs/0.14/registry.html
+  registry: {
+    // Define balancing strategy.
+    // Available values: "RoundRobin", "Random", "CpuUsage", "Latency"
+    strategy: "RoundRobin",
+    // Enable local action call preferring.
+    preferLocal: true,
+  },
 
-	// Settings of Circuit Breaker. More info: https://moleculer.services/docs/0.13/fault-tolerance.html#Circuit-Breaker
-	circuitBreaker: {
-		// Enable feature
-		enabled: false,
-		// Threshold value. 0.5 means that 50% should be failed for tripping.
-		threshold: 0.5,
-		// Minimum request count. Below it, CB does not trip.
-		minRequestCount: 20,
-		// Number of seconds for time window.
-		windowTime: 60,
-		// Number of milliseconds to switch from open to half-open state
-		halfOpenTime: 10 * 1000,
-		// A function to check failed requests.
-		check: (err: Errors.MoleculerRetryableError) => err && err.code >= 500,
-	},
+  // Settings of Circuit Breaker. More info: https://moleculer.services/docs/0.14/fault-tolerance.html#Circuit-Breaker
+  circuitBreaker: {
+    // Enable feature
+    enabled: false,
+    // Threshold value. 0.5 means that 50% should be failed for tripping.
+    threshold: 0.5,
+    // Minimum request count. Below it, CB does not trip.
+    minRequestCount: 20,
+    // Number of seconds for time window.
+    windowTime: 60,
+    // Number of milliseconds to switch from open to half-open state
+    halfOpenTime: 10 * 1000,
+    // A function to check failed requests.
+    //@ts-ignore
+    check: (err: Errors.MoleculerRetryableError) => err && err.code >= 500,
+  },
 
-    // Settings of bulkhead feature. More info: https://moleculer.services/docs/0.13/fault-tolerance.html#Bulkhead
-	bulkhead: {
-		// Enable feature.
-		enabled: false,
-		// Maximum concurrent executions.
-		concurrency: 10,
-		// Maximum size of queue
-		maxQueueSize: 100,
-	},
+  // Settings of bulkhead feature. More info: https://moleculer.services/docs/0.14/fault-tolerance.html#Bulkhead
+  bulkhead: {
+    // Enable feature.
+    enabled: false,
+    // Maximum concurrent executions.
+    concurrency: 10,
+    // Maximum size of queue
+    maxQueueSize: 100,
+  },
 
-	// Enable parameters validation. More info: https://moleculer.services/docs/0.13/validating.html
-	validator: true,
+  // Enable parameters validation. More info: https://moleculer.services/docs/0.14/validating.html
+  validator: true,
 
-	// Enable metrics function. More info: https://moleculer.services/docs/0.13/metrics.html
-	metrics: {
-	enabled: Boolean(process.env.METRICS_ENABLED) == true,
-	reporter: [
-		{
-		type: "Prometheus"
-		}
-	]
-	},
+  // Enable metrics function. More info: https://moleculer.services/docs/0.14/metrics.html
+  metrics: {
+    enabled: Boolean(process.env.METRICS_ENABLED) == true,
+    reporter: [
+      {
+        type: "Prometheus",
+      },
+    ],
+  },
 
-	//  Tracing support setup as of moleculer 0.14
-	tracing: {
-		enabled: Boolean(process.env.TRACING_ENABLED) == true,
-		exporter: {
-			type: "Jaeger",
-			options: {
-				// HTTP Reporter endpoint. If set, HTTP Reporter will be used.
-				endpoint: null,
-				// UDP Sender host option.
-				host: "jaeger",
-				// UDP Sender port option.
-				port: 6832,
-				// Jaeger Sampler configuration.
-				sampler: {
-					// Sampler type. More info: https://www.jaegertracing.io/docs/1.14/sampling/#client-sampling-configuration
-					type: "Const",
-					// Sampler specific options.
-					options: {}
-				},
-				// Additional options for `Jaeger.Tracer`
-				tracerOptions: {},
-				// Default tags. They will be added into all span tags.
-				defaultTags: null
-			}
-		}
-	},
+  //  Tracing support setup as of moleculer 0.14
+  tracing: {
+    enabled: Boolean(process.env.TRACING_ENABLED) == true,
+    exporter: {
+      type: "Jaeger",
+      options: {
+        // HTTP Reporter endpoint. If set, HTTP Reporter will be used.
+        endpoint: null,
+        // UDP Sender host option.
+        host: "jaeger",
+        // UDP Sender port option.
+        port: 6832,
+        // Jaeger Sampler configuration.
+        sampler: {
+          // Sampler type. More info: https://www.jaegertracing.io/docs/1.14/sampling/#client-sampling-configuration
+          type: "Const",
+          // Sampler specific options.
+          options: {},
+        },
+        // Additional options for `Jaeger.Tracer`
+        tracerOptions: {},
+        // Default tags. They will be added into all span tags.
+        defaultTags: null,
+      },
+    },
+  },
 
-	// Register internal services ("$node"). More info: https://moleculer.services/docs/0.13/services.html#Internal-services
-	internalServices: true,
-	// Register internal middlewares. More info: https://moleculer.services/docs/0.13/middlewares.html#Internal-middlewares
-	internalMiddlewares: true,
+  // Register internal services ("$node"). More info: https://moleculer.services/docs/0.14/services.html#Internal-services
+  internalServices: true,
+  // Register internal middlewares. More info: https://moleculer.services/docs/0.14/middlewares.html#Internal-middlewares
+  internalMiddlewares: true,
 
-	// Watch the loaded services and hot reload if they changed. You can also enable it in Moleculer Runner with `--hot` argument
-	hotReload: false,
+  // Watch the loaded services and hot reload if they changed. You can also enable it in Moleculer Runner with `--hot` argument
+  hotReload: false,
 
-	// Register custom middlewares
-	middlewares: [
-		PermissionsMiddleware({
-			prefix: process.env.ROOT_ORG_IDENTIFIER,
-			ketoEndpoint: process.env.KETO_ADMIN_URL
-		})
-	],
+  // Register custom middlewares
+  middlewares: [KetoMiddeware, ManageKetoPermissionsMiddleware],
 
-	// Called after broker created.
-	created(broker) {
+  // Called after broker created.
+  created(broker) {},
 
-	},
+  // Called after broker starte.
+  started(broker) {},
 
-	// Called after broker starte.
-	started(broker) {
-
-	},
-
-	// Called after broker stopped.
-	stopped(broker) {
-
-	},
-
-	// Register custom REPL commands.
-	replCommands: null,
+  // Called after broker stopped.
+  stopped(broker) {},
 };
 
 export = brokerConfig;
