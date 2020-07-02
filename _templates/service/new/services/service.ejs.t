@@ -8,12 +8,16 @@ import {Context, ServiceSchema} from "moleculer";
 <% if(locals.shouldAddDb){ -%>
 // @ts-ignore
 import DbService from "moleculer-db";
+import { dbAdapter } from "../database/database";
+import { ServiceDependencyCacheCleaner } from "../mixins/cacheCleaner";
 import { <%=h.changeCase.pascalCase(name)%>SequelizeModel, I<%=h.changeCase.pascalCase(name)%>Model } from "../models/<%=h.changeCase.snakeCase(name)%>";
+import { IsOwnerMixin } from "@thesatoshicompany/moleculer-keto";
+import { MoleculerDBGraphQLMixin } from "@thesatoshicompany/moleculer-db-graphql";
 <% } -%>
 
 const <%=h.changeCase.pascalCase(name)%>Service: ServiceSchema = {
 	name: "<%=h.changeCase.snakeCase(name)%>",
-
+    version: 1,
 	/**
 	 * Service settings
 	 */
@@ -22,7 +26,12 @@ const <%=h.changeCase.pascalCase(name)%>Service: ServiceSchema = {
 		fields: [
       		"id",
 			"createdAt",
-			"updatedAt"
+			"updatedAt",
+<% if(locals.dbTypeMap) { -%>
+    <% Object.keys(locals.dbTypeMap).forEach(function(fieldName){ -%>
+		"<%= fieldName %>",
+    <% }) -%>
+<% } -%>
 		],
     	graphql: {
       		type: `
@@ -32,7 +41,55 @@ const <%=h.changeCase.pascalCase(name)%>Service: ServiceSchema = {
 			type <%=h.changeCase.pascalCase(name)%> {
 				id: String!
 				createdAt: Date
+<% if(locals.dbTypeMap) {  Object.keys(locals.dbTypeMap).forEach(function(fieldName){ if(locals.dbTypeMap[fieldName].gqlType === "Enum") { -%>
+				<%= fieldName %>: <%= h.changeCase.pascalCase(fieldName) -%><%= locals.dbTypeMap[fieldName].allowNull ? '' : '!' %>
+<% } else if (locals.dbTypeMap[fieldName].gqlType === "list") { %>
+				<%= fieldName %>: [String]<%= locals.dbTypeMap[fieldName].allowNull ? '' : '!' %>
+<% } else { %>
+				<%= fieldName %>: <%= h.changeCase.pascalCase(locals.dbTypeMap[fieldName].gqlType) -%><%= locals.dbTypeMap[fieldName].allowNull ? '' : '!' %>
+<% }})} %>			}
+
+			input <%=h.changeCase.pascalCase(name)%>Input {
+<% if(locals.dbTypeMap) { Object.keys(locals.dbTypeMap).forEach(function(fieldName){ if(locals.dbTypeMap[fieldName].gqlType === "Enum") { -%>
+				<%= fieldName %>: <%= h.changeCase.pascalCase(fieldName) -%>
+<% } else if (locals.dbTypeMap[fieldName].gqlType === "list") { %>
+				<%= fieldName %>: [String]
+<% } else { %>
+				<%= fieldName %>: <%= h.changeCase.pascalCase(locals.dbTypeMap[fieldName].gqlType) -%>
+<% }})} %>
 			}
+
+			input Update<%=h.changeCase.pascalCase(name)%>Input {
+				id: String!
+<% if(locals.dbTypeMap) { Object.keys(locals.dbTypeMap).forEach(function(fieldName){ if(locals.dbTypeMap[fieldName].gqlType === "Enum") { -%>
+				<%= fieldName %>: <%= h.changeCase.pascalCase(fieldName) -%>
+<% } else if (locals.dbTypeMap[fieldName].gqlType === "list") { %>
+				<%= fieldName %>: [String]
+<% } else { %>
+				<%= fieldName %>: <%= h.changeCase.pascalCase(locals.dbTypeMap[fieldName].gqlType) -%>
+<% }})} %>
+			}
+
+			input Query<%=h.changeCase.pascalCase(name)%>Input {
+				id: String
+<% if(locals.dbTypeMap) { Object.keys(locals.dbTypeMap).forEach(function(fieldName){ if(locals.dbTypeMap[fieldName].gqlType === "Enum") { -%>
+				<%= fieldName %>: <%= h.changeCase.pascalCase(fieldName) -%>
+<% } else if (locals.dbTypeMap[fieldName].gqlType === "list") { %>
+				<%= fieldName %>: [String]
+<% } else { %>
+				<%= fieldName %>: <%= h.changeCase.pascalCase(locals.dbTypeMap[fieldName].gqlType) -%>
+<% }})} %>
+			}
+
+<%_ if(locals.enumTypeMap && Object.keys(locals.enumTypeMap).length > 0) { -%>
+	<%_ Object.keys(locals.enumTypeMap).forEach(function(fieldName){ -%>
+		enum <%= h.changeCase.pascalCase(fieldName) -%> {
+	<%_ locals.enumTypeMap[fieldName].enumTypes.split(',').forEach(function(enumName){ -%>
+			<%= h.changeCase.constantCase(enumName) %>
+	<%_ }) -%>
+		}
+    <%_ }) -%>
+<%_ } -%>
 			`,
       resolvers: {
         <%=h.changeCase.pascalCase(name)%>: {}
@@ -40,6 +97,10 @@ const <%=h.changeCase.pascalCase(name)%>Service: ServiceSchema = {
     }
 <% } -%>
     },
+<% if(locals.shouldAddDb){ -%>
+	adapter: dbAdapter,
+<% } -%>
+
 
 	/**
 	 * Service dependencies
@@ -49,10 +110,39 @@ const <%=h.changeCase.pascalCase(name)%>Service: ServiceSchema = {
 	/**
 	 * mixin dependencies
 	 */
+
 	mixins: [
-        <% if(locals.shouldAddDb){ -%>DbService
+<% if(locals.shouldAddDb){ -%>
+		MoleculerDBGraphQLMixin(
+			"<%=h.changeCase.lower(name)%>s", 
+			"<%=h.changeCase.pascalCase(name)-%>",
+			{
+				id: { type: "uuid", optional: true },
+<%_ if(locals.dbTypeMap) { -%>
+	<%_ Object.keys(locals.dbTypeMap).forEach(function(fieldName){-%>
+				<%_ if(locals.dbTypeMap[fieldName].modelType == "ENUM") { -%>
+				<%=fieldName%>: { type: "<%=locals.dbTypeMap[fieldName].paramValidationType-%>", optional: <%=locals.dbTypeMap[fieldName].allowNull-%>, values: [
+					<% locals.enumTypeMap[fieldName].enumTypes.split(',').map(function(value){return h.changeCase.upper(h.inflection.underscore(value, true))}).forEach(function(enumName){-%>"<%=enumName%>", <%_ })%>
+          		]},
+				<%_ } else { -%>
+				<%=fieldName%>: { type: "<%=locals.dbTypeMap[fieldName].paramValidationType-%>", optional: <%=locals.dbTypeMap[fieldName].allowNull-%> },
+				<%_ } -%>
+	<%_ }) -%>
+<%_ } -%>
+			}
+		),
+		IsOwnerMixin("<%=h.changeCase.pascalCase(name)-%>"),
+		ServiceDependencyCacheCleaner("<%=h.changeCase.snakeCase(name)%>", []),
+		DbService
+<%_ } -%>
+	],
+
+<% if(locals.shouldAddDb){ -%>
+	model: {
+    	name: <%=h.changeCase.pascalCase(name)%>SequelizeModel.name,
+    	define: <%=h.changeCase.pascalCase(name)%>SequelizeModel.define
+  	},
 <% } -%>
-    ],
 
 	/**
 	 * Actions
@@ -71,29 +161,48 @@ const <%=h.changeCase.pascalCase(name)%>Service: ServiceSchema = {
 				return `Welcome, ${ctx.params.name}!`;
 			},
 		},
-		welcomePermissioned: {
-			permissions: [
-				{
-					subject: "user",
-					action: "read",
-					flavor: "exact"
-				}
-			],
-			params: {
-				name: "string",
-			},
-			handler(ctx: Context<{ name: string }>) {
-				return `Welcome, ${ctx.params.name}!`;
-			},
-		},
-	},
-
 <% if(locals.shouldAddDb){ -%>
-	model: {
-    	name: <%=h.changeCase.pascalCase(name)%>SequelizeModel.name,
-    	define: <%=h.changeCase.pascalCase(name)%>SequelizeModel.define
-  	},
+	count: {},
+    find: {},
+    get: {},
+    create: {
+      permissions: [
+        {
+          subject: "admin",
+          action: "create",
+          flavor: "exact",
+        },
+      ],
+    },
+    insert: {
+      permissions: [
+        {
+          subject: "admin",
+          action: "create",
+          flavor: "exact",
+        },
+      ],
+    },
+    update: {
+      permissions: [
+        {
+          subject: "admin",
+          action: "update",
+          flavor: "exact",
+        },
+      ],
+    },
+    remove: {
+      permissions: [
+        {
+          subject: "admin",
+          action: "delete",
+          flavor: "exact",
+        },
+      ],
+    },
 <% } -%>
+	},
 
 	/**
 	 * Events
@@ -106,29 +215,8 @@ const <%=h.changeCase.pascalCase(name)%>Service: ServiceSchema = {
 	 * Methods
 	 */
 	methods: {
-
-	},
-
-	/**
-	 * Service created lifecycle event handler
-	 */
-	created() {
-
-	},
-
-	/**
-	 * Service started lifecycle event handler
-	 */
-	// async started() {
-
-	// },
-
-	/**
-	 * Service stopped lifecycle event handler
-	 */
-	// async stopped() {
-
-	// },
-};
+    
+  	}
+}
 
 export = <%=h.changeCase.pascalCase(name)%>Service;

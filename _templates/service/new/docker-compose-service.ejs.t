@@ -10,6 +10,7 @@ skip_if: <%= h.changeCase.snakeCase(name) -%>[^_]
     build:
       context: ./<%=h.changeCase.snakeCase(name)%>
     image: catalyst_<%=h.changeCase.snakeCase(name)%>
+    container_name: <%=h.changeCase.snakeCase(name)%>
     env_file: docker-compose.env
     networks:
       - catalyst-backend
@@ -37,6 +38,14 @@ skip_if: <%= h.changeCase.snakeCase(name) -%>[^_]
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
 <% } -%>
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      KETO_ADMIN_URL: ${KETO_ADMIN_URL}
+      ROOT_ORG_IDENTIFIER: ${ROOT_ORG_IDENTIFIER}
+      KETO_RESOURCE_PREFIX: ${KETO_RESOURCE_PREFIX}
+      KETO_ACTION_PREFIX: ${KETO_ACTION_PREFIX}
+      KETO_SUBJECT_PREFIX: ${KETO_SUBJECT_PREFIX}
     links:
       - nats
       - redis
@@ -48,10 +57,10 @@ skip_if: <%= h.changeCase.snakeCase(name) -%>[^_]
       - redis
       - postgresd
       - traefik
+<% if(locals.shouldExposeOnPort){ -%>
     labels:
       - "traefik.enable=true"
       - "traefik.backend=<%=h.changeCase.snakeCase(name)%>"
-<% if(locals.shouldExposeOnPort){ -%>
       - "traefik.port=<%=port%>"
       - "traefik.frontend.rule=Host:${HOST_NAME}<% if(locals.shouldUseSubPath){ -%>PathPrefixStrip:/<%=path%>/<% } -%>"
 <% } -%>

@@ -16,15 +16,56 @@ const modelDefinition = {
       allowNull: false,
       defaultValue: DataTypes.UUIDV4,
     },
-
+<%_  if(locals.dbTypeMap) { -%>
+  <%_ Object.keys(locals.dbTypeMap).forEach(function(fieldName){-%>
+    <%=fieldName%>: {
+<%_ if(locals.dbTypeMap[fieldName].modelType == "ENUM") { -%>
+      type: DataTypes.<%=locals.dbTypeMap[fieldName].modelType-%>(
+        <% locals.enumTypeMap[fieldName].enumTypes.split(',').map(function(value){return h.changeCase.upper(h.inflection.underscore(value, true))}).forEach(function(enumName){-%>"<%=enumName%>",<%_ })%>
+      ),
+<%_ } else { -%>
+      type: DataTypes.<%=locals.dbTypeMap[fieldName].modelType -%>,
+<%_ } -%>
+      allowNull: <%=Boolean(locals.dbTypeMap[fieldName].allowNull) -%>,
+<%_ if(locals.dbTypeMap[fieldName].defaultValue) { -%>
+    <%_ if(locals.dbTypeMap[fieldName].modelType == "ENUM") { -%>
+      defaultValue: "<%=locals.dbTypeMap[fieldName].defaultValue%>"
+    <%_ } else if(locals.dbTypeMap[fieldName].modelType == "BOOLEAN") { -%>
+      defaultValue: <%=Boolean(locals.dbTypeMap[fieldName].defaultValue)%>
+    <%_ } else { -%>
+      defaultValue: <%=locals.dbTypeMap[fieldName].defaultValue%>
+    <%_ } -%>
+<%_ } -%>
+    },
+  <%_ }) -%>
+<%_ } -%>
     // Timestamps
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE,
   }
 }
 
+<%_ if(locals.enumTypeMap && Object.keys(locals.enumTypeMap).length > 0) { -%>
+<%_ Object.keys(locals.enumTypeMap).forEach(function(fieldName){ -%>
+export enum <%= h.changeCase.pascalCase(fieldName) %> {
+<%_ locals.enumTypeMap[fieldName].enumTypes.split(',').forEach(function(enumName){ -%>
+  <%= h.changeCase.constantCase(enumName) %> = "<%= h.changeCase.constantCase(enumName) %>",
+<%_ }) -%>
+}
+
+<%_ }) -%>
+<%_ } -%>
 export interface I<%=h.changeCase.pascalCase(name)%>Model extends Model {
   id: string;
+<%_ if(locals.dbTypeMap) { -%>
+  <%_ Object.keys(locals.dbTypeMap).forEach(function(fieldName){ -%>
+<%_ if(locals.dbTypeMap[fieldName].modelType == "ENUM") { -%>
+  <%= fieldName %>: <%=h.changeCase.pascalCase(fieldName)%>;
+<%_ } else if (locals.dbTypeMap[fieldName].modelType == "ARRAY(DataTypes.STRING)") { -%>
+  <%= fieldName %>: <%=locals.dbTypeMap[fieldName].typescriptType-%><string>;
+<%_ } else { -%>
+  <%= fieldName %>: <%=locals.dbTypeMap[fieldName].typescriptType-%>;
+<%_ }})} -%>
 }
 
 type <%=h.changeCase.pascalCase(name)%>ModelStatic = typeof Model & {

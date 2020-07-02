@@ -22,12 +22,18 @@ endif
 <% } -%>
 
 <% if(locals.shouldAddDb){ -%>
-start-service: setup-database
+start-service: setup-database build-service db-migrate
 	npm run dev
 <% } else { -%>
-start-service:
+start-service: build-service
 	npm run dev
 <% } -%>
+
+build-service:
+	npm run build
+
+upgrade-dependencies:
+	npm i --save
 
 <% if(locals.shouldAddDb){ -%>
 create-db-migration:
@@ -54,6 +60,6 @@ db-seed-all:
 db-seed-undo-specific:
 	npm run sequelize db:seed:undo
 
-db-seed-all:
+db-seed-undo-all:
 	npm run sequelize db:seed:undo:all
 <% } -%>

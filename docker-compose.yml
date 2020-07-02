@@ -77,51 +77,51 @@ services:
       - redis
       - postgresd
 
-  # service container
-  client:
-    build:
-      context: ./client
-    container_name: client
-    image: catalyst_client
-    env_file: docker-compose.env
-    networks:
-      - catalyst-backend
-      - catalyst-frontend
-    volumes:
-      - ./client:/app:delegated #delegates speeds up mac os volumes
-      - client_vol:/app/node_modules
-    command:
-      - ./wait-for-it.sh
-      - postgresd:5432
-      - --
-      - make
-      - start-service
-    environment:
-      - ADMIN_OAUTH2_CLIENT_ID=${ADMIN_OAUTH2_CLIENT_ID}
-      - ADMIN_OAUTH2_CLIENT_SECRET=${ADMIN_OAUTH2_CLIENT_SECRET}
-      - HOST_NAME=${HOST_NAME}
-      - SUB_PATH=admin
-    ports:
-      - 9089:80
-      - 19000:19000
-      - 19001:19001
-      - 19002:19002
-    links:
-      - nats
-      - redis
-      - hydra
-      - jaeger
-    depends_on:
-      - nats
-      - redis
-      - postgresd
-      - traefik
-      - api
-    labels:
-      - "traefik.enable=true"
-      - "traefik.backend=client"
-      - "traefik.port=8080"
-      - "traefik.frontend.rule=Host:${HOST_NAME};PathPrefix:/"
+  # # service container
+  # client:
+  #   build:
+  #     context: ./client
+  #   container_name: client
+  #   image: catalyst_client
+  #   env_file: docker-compose.env
+  #   networks:
+  #     - catalyst-backend
+  #     - catalyst-frontend
+  #   volumes:
+  #     - ./client:/app:delegated #delegates speeds up mac os volumes
+  #     - client_vol:/app/node_modules
+  #   command:
+  #     - ./wait-for-it.sh
+  #     - postgresd:5432
+  #     - --
+  #     - make
+  #     - start-service
+  #   environment:
+  #     - ADMIN_OAUTH2_CLIENT_ID=${ADMIN_OAUTH2_CLIENT_ID}
+  #     - ADMIN_OAUTH2_CLIENT_SECRET=${ADMIN_OAUTH2_CLIENT_SECRET}
+  #     - HOST_NAME=${HOST_NAME}
+  #     - SUB_PATH=admin
+  #   ports:
+  #     - 9089:80
+  #     - 19000:19000
+  #     - 19001:19001
+  #     - 19002:19002
+  #   links:
+  #     - nats
+  #     - redis
+  #     - hydra
+  #     - jaeger
+  #   depends_on:
+  #     - nats
+  #     - redis
+  #     - postgresd
+  #     - traefik
+  #     - api
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.backend=client"
+  #     - "traefik.port=8080"
+  #     - "traefik.frontend.rule=Host:${HOST_NAME};PathPrefix:/"
 
   # service container
   admin:
