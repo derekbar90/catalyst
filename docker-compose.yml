@@ -30,6 +30,14 @@ services:
       POSTGRES_PORT: ${POSTGRES_PORT}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      KETO_ADMIN_URL: ${KETO_ADMIN_URL}
+      ROOT_ORG_IDENTIFIER: ${ROOT_ORG_IDENTIFIER}
+      KETO_RESOURCE_PREFIX: ${KETO_RESOURCE_PREFIX}
+      KETO_ACTION_PREFIX: ${KETO_ACTION_PREFIX}
+      KETO_SUBJECT_PREFIX: ${KETO_SUBJECT_PREFIX}
     ports:
       - "9033:9033"
     links:
@@ -191,6 +199,9 @@ services:
       HYDRA_ADMIN_URL: http://hydra:4445
       KETO_ADMIN_URL: http://keto:4466
       NODE_INSPECT_PORT: 9030
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     ports:
       - "9030:9030"
     links:
@@ -234,12 +245,20 @@ services:
       SERVICES: user
       DB_NAME: user
       NODE_INSPECT_PORT: 9032
-      TRACING_ENABLED: 'true'
+      TRACING_ENABLED: "true"
       POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PORT: ${POSTGRES_PORT}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      KETO_ADMIN_URL: ${KETO_ADMIN_URL}
+      ROOT_ORG_IDENTIFIER: ${ROOT_ORG_IDENTIFIER}
+      KETO_RESOURCE_PREFIX: ${KETO_RESOURCE_PREFIX}
+      KETO_ACTION_PREFIX: ${KETO_ACTION_PREFIX}
+      KETO_SUBJECT_PREFIX: ${KETO_SUBJECT_PREFIX}
     ports:
       - "9032:9032"
     links:
@@ -268,6 +287,10 @@ services:
     container_name: redis
     ports:
       - "6379:6379"
+    environment:
+      - REDIS_REPLICATION_MODE=master
+      - REDIS_PORT_NUMBER=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     networks:
       - catalyst-backend
     volumes:
@@ -276,7 +299,7 @@ services:
 
   # database
   postgresd:
-    image: postgres:9.6
+    image: postgres:10
     container_name: postgresd
     env_file: .env
     restart: always
@@ -288,37 +311,16 @@ services:
     ports:
       - "5432:5432"
 
-  # router for microservices
-  traefik:
-    image: traefik:alpine
-    container_name: traefik
-    command:
-      - --configFile=/traefik.toml
-      - --web
-      - --logLevel=INFO
-    ports:
-      - "80:80"
-      - "8080:8080"
-      - "443:443"
-    networks:
-      - catalyst-backend
-      - catalyst-frontend
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./traefik/traefik.toml:/traefik.toml
-      - ./traefik/acme.json:/acme.json
-
   # migration container to setup postgres,
   # this usually will only migrate once
   # unless you delete ./postgres/data
   hydra-migrate:
-    image: oryd/hydra:v1.3.2-alpine
+    image: oryd/hydra:${HYDRA_VERSION}
     networks:
       - catalyst-backend
     environment:
-      - DSN=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgresd:5432/${POSTGRES_DB}?sslmode=disable&max_conns=20&max_idle_conns=4
-    command:
-      migrate sql -e --yes
+      - DSN=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgresd:5432/${HYDRA_POSTGRES_DB}?sslmode=disable&max_conns=20&max_idle_conns=4
+    command: migrate sql -e --yes
     depends_on:
       - postgresd
     restart: on-failure
@@ -326,7 +328,7 @@ services:
   # the main hydra container providing
   # http(s)://hydra:4444(4445)
   hydra:
-    image: oryd/hydra:v1.3.2-alpine
+    image: oryd/hydra:${HYDRA_VERSION}
     container_name: hydra
     build:
       context: ./hydra
@@ -343,25 +345,24 @@ services:
     ports:
       # public port
       - "4444:4444"
-      # public port
+      # admin port
       - "4445:4445"
       # port for hydra token user
       - "5555:5555"
-    command:
-      serve all --dangerous-force-http
+      # forge token port
+      - "9010:9010"
+    command: serve all --dangerous-force-http
     env_file: docker-compose.env
     environment:
-      - DSN=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgresd:5432/${POSTGRES_DB}?sslmode=disable&max_conns=20&max_idle_conns=4
+      - DSN=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgresd:5432/${HYDRA_POSTGRES_DB}?sslmode=disable&max_conns=20&max_idle_conns=4
       - LOG_LEVEL=debug
-      - OAUTH2_ISSUER_URL=https://${HOST_NAME}/oauth
+      - URLS_SELF_ISSUER=https://trust.${HOST_NAME}
       - OAUTH2_CONSENT_URL=https://${HOST_NAME}/consent
       - OAUTH2_LOGIN_URL=https://${HOST_NAME}/login
-      - SYSTEM_SECRET=youReallyNeedToChangeThis
-      - OAUTH2_SHARE_ERROR_DEBUG=1
-      - OIDC_SUBJECT_TYPES_SUPPORTED=public,pairwise
-      - OIDC_SUBJECT_TYPE_PAIRWISE_SALT=youReallyNeedToChangeThis
-      - ADMIN_OAUTH2_CLIENT_ID=${ADMIN_OAUTH2_CLIENT_ID}
-      - ADMIN_OAUTH2_CLIENT_SECRET=${ADMIN_OAUTH2_CLIENT_SECRET}
+      - SECRETS_SYSTEM=youReallyNeedToChangeThis
+      - OAUTH2_EXPOSE_INTERNAL_ERRORS=1
+      - OIDC_SUBJECT_IDENTIFIERS_SUPPORTED_TYPES=public,pairwise
+      - OIDC_SUBJECT_IDENTIFIERS_PAIRWISE_SALT=youReallyNeedToChangeThis
       - TRACING_PROVIDER=jaeger
       - TRACING_PROVIDER_JAEGER_SAMPLING_SERVER_URL=http://jaeger:5778/sampling
       - TRACING_PROVIDER_JAEGER_LOCAL_AGENT_HOST_PORT=jaeger:6831
@@ -371,21 +372,21 @@ services:
       - "traefik.enable=true"
       - "traefik.hydra.backend=oauth"
       - "traefik.hydra.port=4444" # callback
-      - "traefik.hydra.frontend.rule=Host:${HOST_NAME};PathPrefixStrip:/oauth/"
+      - "traefik.hydra.frontend.rule=Host:trust.${HOST_NAME}"
 
   keto-migrate:
-    image: oryd/keto:v0.4
+    image: oryd/keto:${KETO_VERSION}
     networks:
       - catalyst-backend
     links:
       - postgresd:postgresd
     environment:
       - LOG_LEVEL=debug
-    command: migrate sql postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgresd:5432/${POSTGRES_DB}?sslmode=disable&max_conns=20&max_idle_conns=4
+    command: migrate sql postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgresd:5432/${KETO_POSTGRES_DB}?sslmode=disable&max_conns=20&max_idle_conns=4
     restart: on-failure
 
   keto:
-    image: oryd/keto:v0.4
+    image: oryd/keto:${KETO_VERSION}
     container_name: keto
     networks:
       - catalyst-backend
@@ -399,7 +400,7 @@ services:
     environment:
       - LOG_LEVEL=debug
       - PORT=4466
-      - DSN=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgresd:5432/${POSTGRES_DB}?sslmode=disable
+      - DSN=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgresd:5432/${KETO_POSTGRES_DB}?sslmode=disable
     restart: on-failure
 
   configurator:
@@ -418,7 +419,7 @@ services:
       - catalyst-backend
     environment:
       - HOST_NAME=${HOST_NAME}
-      
+
       # All of these URLs MUST NOT end with a trailing slash. This is very important!
       - HYDRA_URL=http://hydra:4444
       - HYDRA_ADMIN_URL=http://hydra:4445
@@ -430,16 +431,19 @@ services:
       - "HYDRA_SUBJECT_PREFIX=subjects:hydra:"
       - "HYDRA_RESOURCE_PREFIX=resources:hydra:"
       - "HYDRA_ACTION_PREFIX=actions:hydra:"
-      
+
       - "OATHKEEPER_RESOURCE_PREFIX=resources:oathkeeper:"
       - "OATHKEEPER_ACTION_PREFIX=actions:oathkeeper:"
-      
+
       - "KETO_RESOURCE_PREFIX=resources:${ROOT_ORG_IDENTIFIER}:"
       - "KETO_ACTION_PREFIX=actions:${ROOT_ORG_IDENTIFIER}:"
       - "KETO_SUBJECT_PREFIX=subjects:${ROOT_ORG_IDENTIFIER}:"
 
       - ADMIN_OAUTH2_CLIENT_ID=${ADMIN_OAUTH2_CLIENT_ID}
       - ADMIN_OAUTH2_CLIENT_SECRET=${ADMIN_OAUTH2_CLIENT_SECRET}
+
+      - PLATFORM_OAUTH2_CLIENT_ID=${PLATFORM_OAUTH2_CLIENT_ID}
+      - PLATFORM_OAUTH2_CLIENT_SECRET=${PLATFORM_OAUTH2_CLIENT_SECRET}
 
       - OATHKEEPER_HYDRA_JWK_SET_ID=jwk:oathkeeper
       - OATHKEEPER_HYDRA_CLIENT_ID=clients:oathkeeper-client
@@ -572,6 +576,26 @@ services:
       - "traefik.port=3000"
       - "traefik.frontend.rule=Host:${HOST_NAME};PathPrefixStrip:/grafana"
       - 'traefik.frontend.redirect.entryPoint=https'
+
+  # router for microservices
+  traefik:
+    image: traefik:alpine
+    container_name: traefik
+    command:
+      - --configFile=/traefik.toml
+      - --web
+      - --logLevel=INFO
+    ports:
+      - "80:80"
+      - "8080:8080"
+      - "443:443"
+    networks:
+      - catalyst-backend
+      - catalyst-frontend
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik/traefik.toml:/traefik.toml
+      - ./traefik/acme.json:/acme.json
 
 volumes:
   verification_code_vol:

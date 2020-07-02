@@ -36,7 +36,24 @@ const brokerConfig: BrokerOptions = {
 	transporter: "NATS",
 
 	// Define a cacher. More info: https://moleculer.services/docs/0.13/caching.html
-	cacher: "redis://redis:6379",
+	cacher: {
+    type: "Redis",
+    options: {
+      // Prefix for keys
+      prefix: "MOL",
+      // set Time-to-live to 30sec.
+      ttl: 30,
+      // Turns Redis client monitoring on.
+      monitor: false,
+      // Redis settings
+      redis: {
+        host: process.env.REDIS_HOST || "redis",
+        port: process.env.REDIS_PORT || 6379,
+        password: process.env.REDIS_PASSWORD || "CHANGE_THIS_VALUE",
+        db: 0,
+      },
+    },
+  },
 
 	// Define a serializer.
 	// Available values: "JSON", "Avro", "ProtoBuf", "MsgPack", "Notepack", "Thrift".

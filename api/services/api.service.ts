@@ -1,14 +1,35 @@
-import { Errors, ServiceSchema } from "moleculer";
+import { Errors, Context, ServiceSchema } from "moleculer";
 import ApiGateway = require("moleculer-web");
 const { ApolloService } = require("moleculer-apollo-server");
 const Kind = require("graphql/language").Kind;
 import { hydra } from "../hydra";
-var pug = require("pug");
+import { compileFile } from "pug";
+import { ValidatorResponse } from "types/validator";
 var querystring = require("querystring");
-
+const Validator = require("fastest-validator");
 var nodeFetch = require("node-fetch");
+
+//Cookie parsing imports
+import { parse } from "cookie";
+import Iron from "@hapi/iron";
+
 var ketoUrl = process.env.KETO_ADMIN_URL;
 var mockTlsTermination = {};
+const multer = require("multer");
+
+// TODO empty the destination to prevent memory blow up in container
+const upload = multer({
+  destination: function (req: any, file: any, cb: any) {
+    cb(null, "/var/tmp/");
+  },
+  filename: function (req: any, file: any, cb: any) {
+    cb(null, req.file.originalname);
+  },
+});
+
+const TOKEN_SECRET =
+  process.env.COOKIE_SECRET ||
+  "this-is-a-secret-value-with-at-least-32-characters";
 
 const ApiService: ServiceSchema = {
   name: "api",
@@ -18,8 +39,8 @@ const ApiService: ServiceSchema = {
     ApolloService({
       // Global GraphQL typeDefs
       typeDefs: `
-							scalar Date
-						`,
+        scalar Date
+      `,
 
       // Global resolvers
       resolvers: {
@@ -27,15 +48,14 @@ const ApiService: ServiceSchema = {
           __parseValue(value: any) {
             return new Date(value); // value from the client
           },
-          __serialize(value: any) {
-            return value.getTime(); // value sent to the client
+          __serialize(value: string) {
+            return new Date(value).getTime(); // value sent to the client
           },
           __parseLiteral(ast: { value: any; kind: any }) {
             if (ast.kind === Kind.INT) return parseInt(ast.value, 10); // ast value is always in string format
-
             return null;
-          }
-        }
+          },
+        },
       },
 
       // API Gateway route options
@@ -43,26 +63,28 @@ const ApiService: ServiceSchema = {
         authorization: true,
         path: "/graphql",
         cors: true,
-        mappingPolicy: "restrict"
+        mappingPolicy: "restrict",
       },
       serverOptions: {
-        tracing: true
-      }
-    })
+        tracing: true,
+      },
+    }),
   ],
 
-  // More info about settings: https://moleculer.services/docs/0.13/moleculer-web.html
+  // More info about settings: https://moleculer.services/docs/0.14/moleculer-web.html
   settings: {
     port: process.env.PORT || 3000,
     routes: [
       {
         path: "/api",
-        whitelist: ["**"]
+        whitelist: ["**"],
+        authorization: true,
       },
       {
         path: "/login",
         aliases: {
           "GET /"(req: any, res: any, next: any) {
+            const validator = new Validator();
             let login_challenge: string = null;
             if (req.$params.login_challenge) {
               login_challenge = req.$params.login_challenge;
@@ -70,7 +92,7 @@ const ApiService: ServiceSchema = {
               hydra
                 .getLoginRequest(login_challenge)
                 // This will be called if the HTTP request was successful
-                .then(function(response: any) {
+                .then(function (response: any) {
                   // If hydra was already able to authenticate the user, skip will be true and we do not need to re-authenticate
                   // the user.
                   if (response.skip) {
@@ -82,12 +104,12 @@ const ApiService: ServiceSchema = {
                     return hydra
                       .acceptLoginRequest(login_challenge, {
                         // All we need to do is to confirm that we indeed want to log in the user.
-                        subject: response.subject
+                        subject: response.subject,
                       })
-                      .then(function(response: any) {
+                      .then(function (response: any) {
                         // All we need to do now is to redirect the user back to hydra!
                         res.writeHead(302, {
-                          Location: response.redirect_to
+                          Location: response.redirect_to,
                         });
                         res.end();
                       });
@@ -95,18 +117,49 @@ const ApiService: ServiceSchema = {
 
                   // If authentication can't be skipped we MUST show the login UI.
                   req.$service.buildPageResponse(res, `login`, {
-                    challenge: login_challenge
+                    challenge: login_challenge,
                   });
                 })
                 // This will handle any error that happens when making HTTP calls to hydra
-                .catch(function(error: any) {
+                .catch(function (error: any) {
                   next(error);
                 });
             } else {
-              res.writeHead(302, {
-                Location: `https://${process.env.HOST_NAME}/oauth/oauth2/auth?grant_type=client_credentials&scope=offline&client_id=catalyst_admin&redirect_uri=https://${process.env.HOST_NAME}/admin/callback&response_type=code&state=badassmofo`
-              });
-              res.end();
+              const schema = {
+                grant_type: { type: "string", empty: false },
+                scope: { type: "string", empty: false },
+                client_id: { type: "string", empty: false },
+                redirect_uri: { type: "url" },
+                response_type: { type: "string", empty: false },
+                state: { type: "string", empty: false },
+              };
+
+              const validParams: ValidatorResponse = validator.validate(
+                req.$params,
+                schema
+              );
+
+              if (validParams !== true && typeof validParams == "object") {
+                const errorMessage = validParams
+                  .map((value) => {
+                    return `${value.field}: ${value.message}`;
+                  })
+                  .join(", \r\n");
+
+                req.$service.buildPageResponse(res, `error`, {
+                  message:
+                    "Can't process login request due to missing parameters.",
+                  error: {
+                    status: "Error",
+                    stack: errorMessage,
+                  },
+                });
+              } else {
+                res.writeHead(302, {
+                  Location: `https://trust.${process.env.HOST_NAME}/oauth2/auth?grant_type=${req.$params.grant_type}&scope=${req.$params.scope}&client_id=${req.$params.client_id}&redirect_uri=${req.$params.redirect_uri}&response_type=${req.$params.response_type}`,
+                });
+                res.end();
+              }
             }
           },
           "POST /": async (req: any, res: any, next: any) => {
@@ -117,7 +170,7 @@ const ApiService: ServiceSchema = {
               .on("data", (chunk: string) => {
                 body.push(chunk);
               })
-              .on("end", () => {
+              .on("end", async () => {
                 //@ts-ignore
                 let bodyString = Buffer.concat(body).toString();
 
@@ -129,35 +182,38 @@ const ApiService: ServiceSchema = {
                   csrf?: string;
                 } = querystring.parse(bodyString);
 
-                const isPasswordValid = req.$ctx.call("user.validatePassword", {
-                  email: parsedBody.email,
-                  password: parsedBody.password
-                });
+                const isPasswordValid = await req.$ctx.broker.call(
+                  "v1.user.validatePassword",
+                  {
+                    email: parsedBody.email,
+                    password: parsedBody.password,
+                  }
+                );
 
                 // Let's check if the user provided valid credentials
                 if (!isPasswordValid) {
                   hydra
                     .rejectLoginRequest(parsedBody.challenge, {
                       error: "invalid_request",
-                      error_description: "The user did something stupid..."
+                      error_description: "The user did something stupid...",
                     })
-                    .then(function(response: { redirect_to: string }) {
+                    .then(function (response: { redirect_to: string }) {
                       // All we need to do now is to redirect the browser back to hydra!
                       res.redirect(response.redirect_to);
                     })
                     // This will handle any error that happens when making HTTP calls to hydra
-                    .catch(function(error: Error) {
+                    .catch(function (error: Error) {
                       next(error);
                     });
 
                   // Looks like the user provided invalid credentials, let's show the ui again...
-                  var fn = pug.compileFile(`./pages/login.pug`, {});
+                  var fn = compileFile(`./pages/login.pug`, {});
                   const html = fn({
                     challenge: parsedBody.challenge,
-                    error: "The username / password combination is not correct"
+                    error: "The username / password combination is not correct",
                   });
                   res.writeHead(200, {
-                    "Content-Type": "text/html"
+                    "Content-Type": "text/html",
                   });
                   res.write(html);
                   res.end();
@@ -173,59 +229,88 @@ const ApiService: ServiceSchema = {
                       remember: Boolean(parsedBody.remember),
 
                       // When the session expires, in seconds. Set this to 0 so it will never expire.
-                      remember_for: 3600
+                      remember_for: 3600,
 
                       // Sets which "level" (e.g. 2-factor authentication) of authentication the user has. The value is really arbitrary
                       // and optional. In the context of OpenID Connect, a value of 0 indicates the lowest authorization level.
                       // acr: '0',
                     })
-                    .then(async function(response: { redirect_to: string }) {
+                    .then(async function (response: { redirect_to: string }) {
                       // We need to check if this route is the admin panel
-                      const isAdminProtectedCallback = response.redirect_to.indexOf('%2Fadmin%2F') > -1;
-                      
+                      const isAdminProtectedCallback =
+                        response.redirect_to.indexOf("%2Fadmin%2F") > -1;
+
                       let hasAccess = true;
 
-                      if(isAdminProtectedCallback) {
-                        const getUser = await req.$ctx.call("user.find", {
+                      if (isAdminProtectedCallback) {
+                        const getUser = await req.$ctx.call("v1.user.find", {
                           limit: 1,
-                          query: { email: parsedBody.email}
+                          query: { email: parsedBody.email },
                         });
 
-                        try{
-                          const url = new URL("/engines/acp/ory/exact/roles", ketoUrl);
-                          const ketoPermissions = await nodeFetch(url.toString(), {
-                            method: "GET",
-                            headers: {
-                              ...mockTlsTermination
+                        try {
+                          const url = new URL(
+                            "/engines/acp/ory/exact/roles",
+                            ketoUrl
+                          );
+                          const ketoPermissions = await nodeFetch(
+                            url.toString(),
+                            {
+                              method: "GET",
+                              headers: {
+                                ...mockTlsTermination,
+                              },
                             }
-                          })
-                          
-                          if (ketoPermissions.status < 200 || ketoPermissions.status > 302) {
+                          );
+
+                          if (
+                            ketoPermissions.status < 200 ||
+                            ketoPermissions.status > 302
+                          ) {
                             // This will handle any errors that aren't network related (network related errors are handled automatically)
-                            const body = await ketoPermissions.json()
-                            console.error("An error occurred while making a HTTP request: ", body);
+                            const body = await ketoPermissions.json();
+                            console.error(
+                              "An error occurred while making a HTTP request: ",
+                              body
+                            );
                             throw Promise.reject(new Error(body.error.message));
                           }
                           const roles = await ketoPermissions.json();
-                          hasAccess = roles.some((role: any) => role.id.indexOf(':admin') > -1 && role.members.some((userId: string) => userId === getUser[0].id));
-                        } catch (e){
+                          hasAccess = roles.some(
+                            (role: any) =>
+                              role.id.indexOf(":admin") > -1 &&
+                              role.members.some(
+                                (userId: string) => userId === getUser[0].id
+                              )
+                          );
+                        } catch (e) {
                           console.log(e);
                           throw e;
                         }
                       }
                       res.writeHead(302, {
-                        Location: hasAccess ? response.redirect_to : `https://${process.env.HOST_NAME}`
+                        Location: hasAccess
+                          ? response.redirect_to
+                          : `https://${process.env.HOST_NAME}`,
                       });
-                      res.end();                     
+                      res.end();
                     })
                     // This will handle any error that happens when making HTTP calls to hydra
-                    .catch(function(error: Error) {
+                    .catch(function (error: Error) {
                       next(error);
                     });
                 }
               });
-          }
-        }
+          },
+        },
+      },
+      {
+        path: "/link",
+        aliases: {
+          google: "v1.third_party_tokens.authorize",
+          "google/callback": "v1.third_party_tokens.callback",
+        },
+        authorization: true,
       },
       {
         path: "/consent",
@@ -238,7 +323,7 @@ const ApiService: ServiceSchema = {
               hydra
                 .getConsentRequest(consent_challenge)
                 // This will be called if the HTTP request was successful
-                .then(function(response: any) {
+                .then(function (response: any) {
                   // If a user has granted this application the requested scope, hydra will tell us to not show the UI.
                   if (response.skip) {
                     // You can apply logic here, for example grant another scope, or do whatever...
@@ -262,12 +347,12 @@ const ApiService: ServiceSchema = {
                           // access_token: { foo: 'bar' },
                           // This data will be available in the ID token.
                           // id_token: { baz: 'bar' },
-                        }
+                        },
                       })
-                      .then(function(response: { redirect_to: string }) {
+                      .then(function (response: { redirect_to: string }) {
                         // All we need to do now is to redirect the user back to hydra!
                         res.writeHead(302, {
-                          Location: response.redirect_to
+                          Location: response.redirect_to,
                         });
                         res.end();
                       });
@@ -280,17 +365,16 @@ const ApiService: ServiceSchema = {
                     // and what additional data you have available.
                     requested_scope: response.requested_scope,
                     user: response.subject,
-                    client: response.client
+                    client: response.client,
                   });
                 })
                 // This will handle any error that happens when making HTTP calls to hydra
-                .catch(function(error: Error) {
+                .catch(function (error: Error) {
                   next(error);
                 });
             } else {
               res.writeHead(302, {
-                Location:
-                  "https://funk.derekbarrera.com/oauth/oauth2/auth?grant_type=client_credentials&scope=offline&client_id=catalyst_admin&redirect_uri=https://funk.derekbarrera.com/admin/callback&response_type=code&state=badassmofo"
+                Location: `https://trust.${process.env.HOST_NAME}/oauth2/auth?grant_type=${req.$params.grant_type}&scope=${req.$params.scope}&client_id=${req.$params.client_id}&redirect_uri=${req.$params.redirect_uri}&response_type=${req.$params.response_type}`,
               });
               res.end();
             }
@@ -325,17 +409,17 @@ const ApiService: ServiceSchema = {
                       .rejectConsentRequest(parsedBody.challenge, {
                         error: "access_denied",
                         error_description:
-                          "The resource owner denied the request"
+                          "The resource owner denied the request",
                       })
-                      .then(function(response: { redirect_to: string }) {
+                      .then(function (response: { redirect_to: string }) {
                         // All we need to do now is to redirect the browser back to hydra!
                         res.writeHead(302, {
-                          Location: response.redirect_to
+                          Location: response.redirect_to,
                         });
                         res.end();
                       })
                       // This will handle any error that happens when making HTTP calls to hydra
-                      .catch(function(error: Error) {
+                      .catch(function (error: Error) {
                         next(error);
                       })
                   );
@@ -347,29 +431,29 @@ const ApiService: ServiceSchema = {
                 }
 
                 const userLookup = await req.$ctx.call(
-                  "user.find",
+                  "v1.user.find",
                   {
                     limit: 1,
-                    query: { email: parsedBody.email }
+                    query: { email: parsedBody.email },
                   },
                   {
                     meta: {
                       user: {},
-                      roles: null
-                    }
+                      roles: null,
+                    },
                   }
                 );
 
                 if (userLookup == null || userLookup.length == 0) {
                   req.$service.buildPageResponse(res, `forgot_password`, {
-                    error: "User with provided email could not be found"
+                    error: "User with provided email could not be found",
                   });
                 } else {
                   // Seems like the user authenticated! Let's tell hydra...
                   hydra
                     .getConsentRequest(parsedBody.challenge)
                     // This will be called if the HTTP request was successful
-                    .then(function(response: any) {
+                    .then(function (response: any) {
                       return hydra
                         .acceptConsentRequest(parsedBody.challenge, {
                           // We can grant all scopes that have been requested - hydra already checked for us that no additional scopes
@@ -382,13 +466,13 @@ const ApiService: ServiceSchema = {
                             // unless you limit who can introspect tokens.
                             access_token: {
                               id: userLookup[0].id,
-                              firstName: userLookup[0].firstName
+                              firstName: userLookup[0].firstName,
                             },
                             // This data will be available in the ID token.
                             id_token: {
                               id: userLookup[0].id,
-                              firstName: userLookup[0].firstName
-                            }
+                              firstName: userLookup[0].firstName,
+                            },
                           },
 
                           // ORY Hydra checks if requested audiences are allowed by the client, so we can simply echo this.
@@ -400,27 +484,24 @@ const ApiService: ServiceSchema = {
                           remember: Boolean(parsedBody.remember),
 
                           // When this "remember" sesion expires, in seconds. Set this to 0 so it will never expire.
-                          remember_for: 3600
+                          remember_for: 3600,
                         })
-                        .then(function(response: { redirect_to: string }) {
+                        .then(function (response: { redirect_to: string }) {
                           // All we need to do now is to redirect the user back to hydra!
-
-                          console.log(`redirect_ending:`, response.redirect_to);
-
                           res.writeHead(302, {
-                            Location: response.redirect_to
+                            Location: response.redirect_to,
                           });
                           res.end();
                         });
                     })
                     // This will handle any error that happens when making HTTP calls to hydra
-                    .catch(function(error: Error) {
+                    .catch(function (error: Error) {
                       next(error);
                     });
                 }
               });
-          }
-        }
+          },
+        },
       },
       {
         // The user flow looks like this...
@@ -448,7 +529,7 @@ const ApiService: ServiceSchema = {
 
               // Looks like the user provided invalid credentials, let's show the ui again...
               req.$service.buildPageResponse(res, `forgot_password`, {
-                code
+                code,
               });
             } else {
               req.$service.buildPageResponse(res, `forgot_password`, {});
@@ -468,21 +549,21 @@ const ApiService: ServiceSchema = {
                   email: string;
                 } = querystring.parse(bodyString);
 
-                const userLookup = await req.$ctx.call("user.find", {
+                const userLookup = await req.$ctx.call("v1.user.find", {
                   limit: 1,
-                  query: { email: parsedBody.email }
+                  query: { email: parsedBody.email },
                 });
 
                 if (userLookup == null || userLookup.length == 0) {
                   req.$service.buildPageResponse(res, `forgot_password`, {
-                    error: "User with provided email could not be found"
+                    error: "User with provided email could not be found",
                   });
                 } else {
                   const forgotPasswordCode = await req.$ctx.call(
                     "verification_code.getCode",
                     {
                       userId: userLookup[0].id,
-                      type: "PASSWORD_RESET_REQUEST"
+                      type: "PASSWORD_RESET_REQUEST",
                     }
                   );
 
@@ -493,12 +574,12 @@ const ApiService: ServiceSchema = {
                       username: userLookup[0].username,
                       userId: userLookup[0].id,
                       verifyToken: forgotPasswordCode,
-                      host: process.env.HOST_NAME
-                    }
+                      host: process.env.HOST_NAME,
+                    },
                   });
 
                   req.$service.buildPageResponse(res, `forgot_password`, {
-                    success: "An email has been sent."
+                    success: "An email has been sent.",
                   });
                 }
               });
@@ -520,7 +601,7 @@ const ApiService: ServiceSchema = {
               error?: string;
             } = {
               code,
-              id
+              id,
             };
 
             try {
@@ -529,14 +610,14 @@ const ApiService: ServiceSchema = {
                 {
                   code,
                   userId: id,
-                  type: "PASSWORD_RESET_REQUEST"
+                  type: "PASSWORD_RESET_REQUEST",
                 }
               );
 
               if (!isValidCodeForUser) {
                 params = {
                   ...params,
-                  error: "Invalid password reset link"
+                  error: "Invalid password reset link",
                 };
               } else {
                 // If the password request request was valid and not used
@@ -545,7 +626,7 @@ const ApiService: ServiceSchema = {
                   "verification_code.getCode",
                   {
                     userId: id,
-                    type: "PASSWORD_RESET_ACTION"
+                    type: "PASSWORD_RESET_ACTION",
                   }
                 );
 
@@ -553,13 +634,13 @@ const ApiService: ServiceSchema = {
                 // action code
                 params = {
                   ...params,
-                  code: forgotPasswordActionCode
+                  code: forgotPasswordActionCode,
                 };
               }
             } catch (error) {
               params = {
                 ...params,
-                error: error.message
+                error: error.message,
               };
             }
 
@@ -592,43 +673,104 @@ const ApiService: ServiceSchema = {
                   success?: string;
                 } = {
                   code: parsedBody.code,
-                  id: parsedBody.id
+                  id: parsedBody.id,
                 };
 
                 try {
                   const userLookup = await req.$ctx.call(
-                    "user.changePassword",
+                    "v1.user.changePassword",
                     {
-                      ...parsedBody
+                      ...parsedBody,
                     }
                   );
 
                   params = {
                     ...params,
-                    success: `Congrats ${userLookup.firstName}, you're password reset is complete.`
+                    success: `Congrats ${userLookup.firstName}, you're password reset is complete.`,
                   };
                 } catch (error) {
                   params = {
                     ...params,
-                    error: error.message
+                    error: error.message,
                   };
                 }
 
                 req.$service.buildPageResponse(res, `forgot_password`, params);
               });
-          }
-        }
-      }
+          },
+        },
+      },
+      {
+        path: "/upload",
+        use: [upload.single("file")],
+        // You should disable body parsers
+        bodyParsers: {
+          json: false,
+          urlencoded: false,
+        },
+
+        aliases: {
+          // File upload from HTML multipart form
+          "POST /": async (req: any, res: any, next: any) => {
+            res.setHeader("Content-Type", "application/json");
+            if (!req.file || !req.body.entityId) {
+              return res.end(
+                JSON.stringify({
+                  error: "file and entityId is required",
+                })
+              );
+            }
+            try {
+              const result = await req.$ctx.call("v1.media.uploadMedia", {
+                fileName: req.file.originalname,
+                size: req.file.size,
+                buffer: req.file.buffer,
+                entityId: req.body.entityId,
+                type: req.file.mimetype,
+              });
+              return res.end(JSON.stringify({ result }));
+            } catch (e) {
+              return res.end(
+                JSON.stringify({
+                  error: e,
+                })
+              );
+            }
+          },
+
+          // File upload from AJAX or cURL
+          "PUT /": "stream:file.save",
+
+          // File upload from HTML form and overwrite busboy config
+          "POST /multi": {
+            type: "multipart",
+            // Action level busboy config
+            busboyConfig: {
+              limits: { files: 3 },
+            },
+            action: "file.save",
+          },
+        },
+
+        // Route level busboy config.
+        // More info: https://github.com/mscdex/busboy#busboy-methods
+        busboyConfig: {
+          limits: { files: 1 },
+          // Can be defined limit event handlers
+          // `onPartsLimit`, `onFilesLimit` or `onFieldsLimit`
+        },
+        mappingPolicy: "restrict",
+      },
     ],
     // Serve assets from "public" folder
     assets: {
-      folder: "public"
-    }
+      folder: "public",
+    },
   },
 
   methods: {
     renderPage(name: string, params: object, options: object): string {
-      var fn = pug.compileFile(
+      var fn = compileFile(
         `${__dirname.split("services")[0]}pages/${name}.pug`,
         options
       );
@@ -637,14 +779,17 @@ const ApiService: ServiceSchema = {
     buildPageResponse(res: any, page: string, payload: {}): any {
       const html = this.renderPage(page, payload, {});
       res.writeHead(200, {
-        "Content-Type": "text/html"
+        "Content-Type": "text/html",
       });
       res.write(html);
       return res.end();
     },
-    async authorize(ctx, route, req, res) {
+    async authorize(ctx: Context<{}, { user: { id?: string, name?: string, isLoggedIn: boolean }, roles: Array<string> }>, route: string, req: any, res: any) {
+      this.logger.info("running authorize");
       // Read the token from header
-      let auth = req.headers["authorization"];
+      let auth = req.headers["authorization"] || req.headers["Authorization"];
+      let authCookie = req.headers["cookie"];
+
       if (auth && auth.startsWith("Bearer")) {
         let token = auth.slice(7);
 
@@ -664,9 +809,9 @@ const ApiService: ServiceSchema = {
           // Set the authorized user entity to `ctx.meta`
           ctx.meta.user = {
             id: tokenIntrospection.ext.id,
-            name: tokenIntrospection.ext.firstName
+            name: tokenIntrospection.ext.firstName,
+            isLoggedIn: true,
           };
-          console.log(tokenIntrospection.scope);
           ctx.meta.roles = tokenIntrospection.scope.split(" ");
           return ctx;
         } else {
@@ -677,11 +822,68 @@ const ApiService: ServiceSchema = {
             "ERR_UNAUTHORIZED"
           );
         }
+      } else if (authCookie && authCookie.indexOf("poi_auth_token") > -1) {
+        const token = parse(authCookie);
+        //@ts-ignore
+        const authCookieInfo: {
+          authorizationKeys: {
+            accessToken: string;
+            refreshToken: string;
+          };
+        } = await Iron.unseal(
+          token["poi_auth_token"],
+          TOKEN_SECRET,
+          Iron.defaults
+        );
+
+        // They have a cookie for the root domain but do not have and auth'ed keys yet
+        // if so then let the request continue and have the permission middleware on each
+        // service handle which endpoints should be public or not
+        if (authCookieInfo.authorizationKeys === undefined) {
+          return ctx;
+        }
+
+        const tokenIntrospection: {
+          active: boolean;
+          client_id: boolean;
+          scope: string;
+          sub: string;
+          ext: {
+            firstName: string;
+            id: string;
+          };
+        } = await hydra.checkToken(
+          authCookieInfo.authorizationKeys.accessToken
+        );
+
+        // Check the token
+        if (tokenIntrospection && tokenIntrospection.active) {
+          // Set the authorized user entity to `ctx.meta`
+          ctx.meta.user = {
+            id: tokenIntrospection.ext.id,
+            name: tokenIntrospection.ext.firstName,
+            isLoggedIn: true,
+          };
+          ctx.meta.roles = tokenIntrospection.scope.split(" ");
+          return ctx;
+        } else if (req.$route.path == "/graphql") {
+          return ctx;
+        } else {
+          // Invalid token
+          throw new Errors.MoleculerClientError(
+            "Unauthorized: Invalid cookie provided",
+            401,
+            "ERR_UNAUTHORIZED"
+          );
+        }
       } else {
         // resolving as a pass through without an error
         // Permissions are checked by the user of a middleware which checks token scope.
         // If there is no token... then the call if it has zero permisions will be allowed
         // If there is a token it's permissions are checked against the Keto service
+        ctx.meta.user = {
+          isLoggedIn: false,
+        };
         return ctx;
 
         // If you want you can block all graphql calls by rejecting the promise.
@@ -691,8 +893,8 @@ const ApiService: ServiceSchema = {
         //   "ERR_NO_TOKEN"
         // )));
       }
-    }
-  }
+    },
+  },
 };
 
 export = ApiService;
