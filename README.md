@@ -74,13 +74,9 @@ These can also be viewed by looking at the `docker-compose.yaml` file in the pro
   
 
 |Port |Service |
-
 |----------------|-------------------------------|
-
 |3000 |Traefik Main |
-
 |3001 |Traefik Admin |
-
 |4444 |Hydra Main |
 
 ## `Required Setup Step: .ENV Config Setup`
