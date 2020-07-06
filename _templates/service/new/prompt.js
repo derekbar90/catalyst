@@ -387,8 +387,6 @@ module.exports = {
 
     responsePayload = { ...responsePayload, nodeDebugPort };
 
-    console.log(responsePayload);
-
     return responsePayload;
   },
 };

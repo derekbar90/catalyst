@@ -5,55 +5,7 @@
 
 Project Catalyst is a microservices framework which allows you to create and deploy secured base application development tools within 10 minutes.
 
-1.0 Goals:
- - [x] User Management
-	 - [x] User Registration
-	 - [x] User Login
-	 - [x] Account Verify
-	 - [x] Password Reset
-	 - [ ] Forgot Username
-	 - [x] Global User Registration Event
- - [x] Database Setup
-	 - [x] Local dev support container
-	 - [x] Configurable db adapter
-	 - [x] Migrations support
-	 - [x] Bootstrap on service at launch
- - [ ] Metrics Services
-	 - [x] Prometheus setup
-	 - [x]  Grafana setup at /grafana
-	 - [x]  Metrics config setup for services
-		 - [ ] Add to template generation
- - [ ] Tracing Services
-	 - [x] Jaeger setup at /jaeger
-	 - [x] Tracing config setup for services
-		 - [ ] Add to template generation
- - [x] SSL Support
-	 - [x]  LetsEncrypt Setup
-	 - [x]  Traefik Setup at :8080/dashboard
-	 - [ ]  Domain setup instruction in README.md
- - [x] Redis Cache
- - [x] API Gateway
-	 - [x] REST
-	 - [x] GraphQL
- - [x] OAuth 2.0
-   - [x] implicit flow
-   - [x] consent flow
-   - [x] auth code flow
- - [x] ORY Keto
- - [x] Email Suport
-   - [x] Service setup w/ mailgun provider 
-   - [x] Templating
-   - [x] User registration event consumption for welcome email
-
-1.1 Goals:
-  - [ ] Kubernetes configuation
-  - [ ] Helm charts for each base service
-  - [ ] Jenkins X Support
-
-1.2 Gaols: 
-  - [ ] Social Login
-  - [ ] Lerna multi repo support
-  - [ ] One time password support
+![](./_templates/cli.gif =825x600)
 	
 ## Initial setup
 
@@ -159,7 +111,58 @@ EMAIL_PROVIDER==#############
 
 - `npm run dc:down`: Stop the stack with Docker Compose
 
-  
+# Roadmap
+
+1.0 Goals:
+ - [x] User Management
+	 - [x] User Registration
+	 - [x] User Login
+	 - [x] Account Verify
+	 - [x] Password Reset
+	 - [ ] Forgot Username
+	 - [x] Global User Registration Event
+ - [x] Database Setup
+	 - [x] Local dev support container
+	 - [x] Configurable db adapter
+	 - [x] Migrations support
+	 - [x] Bootstrap on service at launch
+ - [ ] Metrics Services
+	 - [x] Prometheus setup
+	 - [x]  Grafana setup at /grafana
+	 - [x]  Metrics config setup for services
+		 - [ ] Add to template generation
+ - [ ] Tracing Services
+	 - [x] Jaeger setup at /jaeger
+	 - [x] Tracing config setup for services
+		 - [ ] Add to template generation
+ - [x] SSL Support
+	 - [x]  LetsEncrypt Setup
+	 - [x]  Traefik Setup at :8080/dashboard
+	 - [ ]  Domain setup instruction in README.md
+ - [x] Redis Cache
+ - [x] API Gateway
+	 - [x] REST
+	 - [x] GraphQL
+ - [x] OAuth 2.0
+   - [x] implicit flow
+   - [x] consent flow
+   - [x] auth code flow
+ - [x] ORY Keto
+ - [x] Email Suport
+   - [x] Service setup w/ mailgun provider 
+   - [x] Templating
+   - [x] User registration event consumption for welcome email
+
+1.1 Goals:
+  - [ ] Kubernetes configuation
+  - [ ] Helm charts for each base service
+  - [ ] Jenkins X Support
+
+1.2 Gaols: 
+  - [ ] Social Login
+  - [ ] Lerna multi repo support
+  - [ ] One time password support
+
 
 ## Links to main libraries to understand
 

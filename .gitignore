@@ -80,3 +80,5 @@ api/public/*
 **/*.js
 hydra.js*
 traefik/acme.json
+
+.history
