@@ -5,7 +5,7 @@
 
 Project Catalyst is a microservices framework which allows you to create and deploy secured base application development tools within 10 minutes.
 
-![](./_templates/cli.gif =825x600)
+![](_templates/cli.gif =825x600)
 	
 ## Initial setup
 
