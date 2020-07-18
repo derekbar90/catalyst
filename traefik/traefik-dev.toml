@@ -1,8 +1,6 @@
-debug = true
+debug = false
 
-[accessLog]
-
-logLevel = "DEBUG"
+logLevel = "ERROR"
 defaultEntryPoints = ["https","http"]
 
 [entryPoints]
@@ -10,10 +8,10 @@ defaultEntryPoints = ["https","http"]
   address = ":80"
     [entryPoints.http.redirect]
     entryPoint = "https"
-  [entryPoints.https]
-  address = ":443"
-  [entryPoints.https.tls]
-    [[entryPoints.https.tls.certificates]]
+ [entryPoints.https]
+ address = ":443"
+ [entryPoints.https.tls]
+  [[entryPoints.https.tls.certificates]]
       certFile = "/etc/certs/certs-cert.pem"
       keyFile = "/etc/certs/certs-key.pem"
 
