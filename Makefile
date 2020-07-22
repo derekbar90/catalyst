@@ -54,7 +54,7 @@ stop-tracking-acme-changes:
 	git update-index --skip-worktree traefik/acme.json
 
 generate-user-token:
-	docker-compose exec hydra hydra token user --skip-tls-verify --port 9010 --auth-url http://trust.${HOST_NAME}/oauth2/auth --token-url http://hydra:4444/oauth2/token --client-id proofofimpact_platform --client-secret ubj_PF4YaLaz9kuTzZFqqrXbey2U --scope openid,offline
+	docker-compose exec hydra hydra token user --skip-tls-verify --port 9010 --auth-url http://trust.${HOST_NAME}/oauth2/auth --token-url http://hydra:4444/oauth2/token --client-id catalyst_platform --client-secret ubj_PF4YaLaz9kuTzZFqqrXbey2U --scope openid,offline
 
 ifneq ($(HOST_NAME),-)
 setup-local-certs:
