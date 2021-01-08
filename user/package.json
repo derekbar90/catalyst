@@ -39,7 +39,7 @@
   },
   "dependencies": {
     "@types/bcrypt": "^3.0.0",
-    "bcrypt": "^3.0.6",
+    "bcrypt": "^5.0.0",
     "ioredis": "^4.16.0",
     "jaeger-client": "^3.17.2",
     "moleculer": "0.14.6",
