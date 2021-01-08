@@ -14,13 +14,14 @@ setup-database:
 	@echo ---------------
 endif
 
-start-service: setup-database db-migrate
+start-service: setup-database db-migrate	
 	npm run dev
 
 create-db-migration:
 	npm run sequelize migration:generate -- --name=${name}
 
 db-migrate:
+	npm run build -- models/*.ts migrations/*.ts
 	npm run sequelize db:migrate
 
 db-migrate-status:
