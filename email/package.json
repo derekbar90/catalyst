@@ -43,7 +43,7 @@
     "moleculer-mail": "^1.2.3",
     "nats": "^1.4.2",
     "nodemailer-mailgun-transport": "2.0.0",
-    "pug": "^2.0.4"
+    "pug": "^3.0.1"
   },
   "engines": {
     "node": ">= 8.x.x"
