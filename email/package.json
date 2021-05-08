@@ -36,7 +36,7 @@
     "typescript": "^3.8.3"
   },
   "dependencies": {
-    "handlebars": "^4.7.3",
+    "handlebars": "^4.7.7",
     "ioredis": "^4.16.0",
     "moleculer": "0.14.6",
     "moleculer-db": "^0.8.5",
