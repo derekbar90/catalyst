@@ -79,7 +79,7 @@
     "moleculer-apollo-server": "^0.1.3",
     "moleculer-web": "^0.9.0-beta6",
     "moment": "2.23.0",
-    "next": "9.1.2",
+    "next": "11.1.3",
     "next-cookies": "Sly777/next-cookies#master",
     "next-routes": "1.4.2",
     "node-fetch": "^2.6.0",
