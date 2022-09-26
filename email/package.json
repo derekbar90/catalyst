@@ -42,7 +42,7 @@
     "moleculer-db": "^0.8.5",
     "moleculer-mail": "^1.2.3",
     "nats": "^1.4.2",
-    "nodemailer-mailgun-transport": "2.0.0",
+    "nodemailer-mailgun-transport": "2.1.5",
     "pug": "^2.0.4"
   },
   "engines": {
